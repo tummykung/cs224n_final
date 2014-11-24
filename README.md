@@ -1,5 +1,5 @@
-NLP 224N Final Project Propoosal
-================================
+NLP 224N Final Project Proposal
+===============================
 
 Introduction
 ------------

@@ -26,7 +26,7 @@ sentences = {}
 global_concept_list = []
 cached_polarity = {}
 pairs = []
-sn = Senticnet() # you can do sn.concept(word), sn.polarity(word), sn.semantics(word), sn.sentics(word)
+sn = Senticnet() # you can call sn.concept(word), sn.polarity(word), sn.semantics(word), sn.sentics(word)
 # examples
 # ========
 # In [12]: sn.concept("love")
@@ -172,7 +172,7 @@ def compute_polarity_scores():
 
 
 def compute_polarity(subconcept):
-    """look up from a table if cached. Else just compute by taking average of
+    """look up from a table if cached. Else just compute by taking the average of
     the polarity scores of all the corpus concepts that contain this subconcept."""
     if subconcept in cached_polarity:
         return cached_polarity[subconcept]
@@ -180,7 +180,7 @@ def compute_polarity(subconcept):
     # if len(subconcept) <= 2:
         # then it's probably a preposition
         # return 0
-        # NOTE: instead of doing this, we manually added prepositions to hte polarity dictionary
+        # NOTE: instead of doing this, we manually added prepositions to the polarity dictionary
 
     count = 0
     polarity = 0.0
