@@ -2,7 +2,7 @@ import simplejson
 import process_reviews
 import sys
 
-OUTPUT_FILENAME = "labeling.json"
+outputFileName = ""
 outputs = []
 beginRange = -1
 endRange = -1
@@ -50,17 +50,18 @@ def rate():
                     "subsentence_key": subsentence_key,
                     "rating": rating,
                 }
-                with open(OUTPUT_FILENAME, 'a') as f:
+                with open(outputFileName, 'a') as f:
                     f.write(simplejson.dumps(output))
                     f.write('\n')
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print "Invalid number of arguments, need to supply begin and end range!"
+    if len(sys.argv) != 4:
+        print "Invalid number of arguments, need: python ranker.py beginRange endRange outputFileName"
         exit(0)
     try:
         beginRange = int(sys.argv[1])
         endRange = int(sys.argv[2])
+        outputFileName = sys.argv[3]
     except ValueError:
         print "Bad input arguments, begin and end range need to be integers!"
         exit(0)
