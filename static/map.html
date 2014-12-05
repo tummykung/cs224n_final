@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentiment Analysis</title>
+  <link href='http://fonts.googleapis.com/css?family=Roboto:300' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" type="text/css" href="admin.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+  <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
+  <script src="https://datejs.googlecode.com/svn/trunk/build/date.js"></script>
+  <script type="text/javascript" src="test_data/test_data.json"></script>
+  <!-- tum's Google API code -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQP8iumU9nDYFn7w3O-L-ivVfYp_3a-GU&sensor=false&libraries=visualization"></script>
+  <script src="admin.js"></script>
+  <script src="map.js"></script>
+  <script src="jquery.knob.js"></script>
+</head>
+<body ng-app="sentimental" ng-controller="MapController">
+  <div class="container" ng-controller="MapUIController">
+    <div class="left-bar" ng-click="refreshMap()">
+      <div id="top-part">
+        <canvas id="mainCanvas" width="200" height="65" style="position:absolute; float: left"></canvas>
+        <h1 style="float:right">Sentiment Analysis</h1>
+        <h2 style="float:right; margin-top: 0">Tum and Raphael</h2>
+      </div>
+      <label>Choose an emotion:</label>
+      <select class="options">
+        <option ng-repeat="option in options" ng-click="go(option[0], option[1], option[2], option[3], option[4])">{{capitaliseFirstLetter(option[4])}}</option>
+      </select>
+      <!-- More details about knobs: https://github.com/aterrien/jQuery-Knob -->
+      <label style="margin-top:0.6em">Or choose from the wheel:</label>
+      <!-- More details about knobs: https://github.com/aterrien/jQuery-Knob -->
+       <div class="demo">
+            <!-- floating elements must come first! !-->
+            <div id="right-axis" style="margin-bottom:-1em">{{rightAxis}}</div>
+            <select class="axes">
+              <option ng-click="switchAxes(0, 'pleasantness', 'attention')">Pleasantness vs
+                Attention</option>
+              <option ng-click="switchAxes(1, 'sensitivity', 'aptitude')">Sensitivity vs
+                Aptitude</options>
+              <option ng-click="switchAxes(2, 'attention', 'sensitivity')">Sensitivity vs
+                Attention</option>
+              <option ng-click="switchAxes(3, 'aptitude', 'pleasantness')">Pleasantness vs
+                Aptitude</option>
+            </select>
+            <div style="font-size: 10pt;width:100px;position:relative;margin-bottom:-1.1em; left: 30px; top:45px;-moz-transform:rotate(-45deg);-webkit-transform:rotate(-45deg);transform:rotate(-45deg)">{{label4}}</div>
+            <div style="font-size: 10pt;width:100px;position:relative;margin-bottom:-1.1em; left: 150px; top: 42px;-moz-transform:rotate(45deg);-webkit-transform:rotate(45deg);transform:rotate(45deg)">{{label1}}</div>
+            <div style="font-size: 10pt;width:100px;position:relative;margin-bottom:-1.1em; left: 150px; top: 162px;-moz-transform:rotate(-45deg);-webkit-transform:rotate(-45deg);transform:rotate(-45deg)">{{label2}}</div>
+            <div style="font-size:10pt;width:100px;position:relative;margin-bottom:-1.1em; left: 30px; top: 156px;-moz-transform:rotate(45deg);-webkit-transform:rotate(45deg);transform:rotate(45deg)">{{label3}}</div>
+            <div id="top-axis">{{topAxis}}</div>
+            <input class="knob" data-min="0" data-displayInput=false data-max="360" data-width="150" data-height="170" data-cursor=true data-fgColor="#222222" data-thickness=.3 value="3">
+        </div>
+      <button type="button" class="btn btn-primary" id="control-expander" > <span id="show-hide">Hide</span> Advanced Options</button>
+      <div id="controls">
+        <div class="control">
+          <label class="control-label">Pleasantness</label>
+          <div class="slider" id="pleasantness"></div>
+          <ol class="slider-label">
+            <li>grief</li>
+            <li>sadness</li>
+            <li>pensiveness</li>
+            <li>serenity</li>
+            <li>joy</li>
+            <li>ecstasy</li>
+          </ol>
+        </div>
+        <div class="control">
+          <label class="control-label">Attention</label>
+          <div class="slider" id="attention"></div>
+          <ol class="slider-label">
+            <li>amazement</li>
+            <li>surprise</li>
+            <li>distraction</li>
+            <li>interest</li>
+            <li>anticipation</li>
+            <li>vigilance</li>
+          </ol>
+        </div>
+        <div class="control">
+          <label class="control-label">Sensitivity</label>
+          <div class="slider" id="sensitivity"></div>
+          <ol class="slider-label">
+            <li>terror</li>
+            <li>fear</li>
+            <li>apprehension</li>
+            <li>annoyance</li>
+            <li>anger</li>
+            <li>rage</li>
+          </ol>
+        </div>
+        <div class="control">
+          <label class="control-label">Aptitude</label>
+          <div class="slider" id="aptitude"></div>
+          <ol class="slider-label">
+            <li>loathing</li>
+            <li>disgust</li>
+            <li>boredom</li>
+            <li>acceptance</li>
+            <li>trust</li>
+            <li>admiration</li>
+          </ol>
+        </div>
+        <button type="button" class="btn" ng-click="go(50, 50, 50, 50, '')">Reset</button>
+      </div>
+    </div>
+    <div id="map-canvas" class="map-canvas" style="height: 96vh">
+    </div>
+  </body>
+</html>
