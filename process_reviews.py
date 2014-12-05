@@ -18,7 +18,7 @@ INPUT_FILENAME = "yelp_academic_dataset_review.json"
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
 PAIRS_FILENAME = "pairs.txt"
-NUM_SAMPPLE = 10000
+NUM_SAMPLE = 10000
 NUM_TARGET_SENTENCES = 100
 TARGET_WORD = "burger".lower()
 
@@ -54,7 +54,7 @@ def load_pairs():
 
 def read_input():
     with open(INPUT_FILENAME, 'r') as f:
-        for i in range(NUM_SAMPPLE):
+        for i in range(NUM_SAMPLE):
             inputs.append(simplejson.loads(f.readline()))
 
     with open(CONCEPT_FILENAME, 'r') as f:
@@ -69,7 +69,7 @@ def read_input():
 
 def filter_sentences():
     # parse sentences and also make a filter of words of interest
-    for i in range(NUM_SAMPPLE):
+    for i in range(NUM_SAMPLE):
         sentences[i] = map(lambda x: x.strip().lower(), inputs[i]['text'].split("."))
         for j in range(len(sentences[i])):
             if TARGET_WORD in sentences[i][j]:
