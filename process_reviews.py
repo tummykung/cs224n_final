@@ -18,7 +18,7 @@ INPUT_FILENAME = "yelp_academic_dataset_review.json"
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
 PAIRS_FILENAME = "pairs.txt"
-NUM_SAMPPLE = 600
+NUM_SAMPPLE = 10000
 NUM_TARGET_SENTENCES = 100
 TARGET_WORD = "burger".lower()
 
