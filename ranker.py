@@ -18,17 +18,21 @@ def rate():
     for i,sentence_key in enumerate(process_reviews.filtered_sentences.keys()):
         if i < beginRange or i > endRange:
             continue
-        print ""
+        print "==============================="
         print "sentence#: " + str(i + 1) + "/" + str(num_sentence)
+        print ""
         sentence_dict = process_reviews.filtered_sentences[sentence_key]
-        for subsentence_key in sentence_dict.keys():
-            if not isinstance(subsentence_key, int):
-                continue
+        for subsentence_key in sorted(filter(lambda x: isinstance(x, int), sentence_dict.keys())):
             sentence = sentence_dict[subsentence_key]['sentence']
+            print "-------------------------------"
+            print "subsentence#: " + str(subsentence_key)
+            print ""
             print sentence
+            print ""
             valid = False
             while not valid:
                 rating = raw_input("Rate this sentence: ")
+                print ""
                 try:
                     rating = int(rating)
                 except ValueError:

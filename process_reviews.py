@@ -18,7 +18,7 @@ INPUT_FILENAME = "yelp_academic_dataset_review.json"
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
 PAIRS_FILENAME = "pairs.txt"
-NUM_SAMPPLE = 10000
+NUM_SAMPPLE = 48
 NUM_TARGET_SENTENCES = 100
 TARGET_WORD = "burger".lower()
 
@@ -73,12 +73,13 @@ def filter_sentences():
         sentences[i] = map(lambda x: x.strip().lower(), inputs[i]['text'].split("."))
         for j in range(len(sentences[i])):
             if TARGET_WORD in sentences[i][j]:
-                filtered_sentences[i] = {
-                    'review_id': inputs[i]['review_id'],
-                    'stars': inputs[i]['stars'],
-                    'date': inputs[i]['date'],
-                    'business_id': inputs[i]['business_id'],
-                }
+                if i not in filtered_sentences:
+                    filtered_sentences[i] = {
+                        'review_id': inputs[i]['review_id'],
+                        'stars': inputs[i]['stars'],
+                        'date': inputs[i]['date'],
+                        'business_id': inputs[i]['business_id'],
+                    }
                 filtered_sentences[i][j] = {'sentence': sentences[i][j]}
 
 
