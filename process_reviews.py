@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import simplejson
 import nltk
+from nltk.stem import WordNetLemmatizer
 from senticnet.senticnet import Senticnet
 import subprocess
 import ipdb
@@ -8,7 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ==== CONFIGURATION ====
-CONCEPT_PARSER_PATH = "/Users/sorathan/Downloads/concept-parser"
+CONCEPT_PARSER_PATH = "~/concept-parser"
+MALT_PARSER_PATH = "~/maltparser-1.8.1"
 LIB_PATH = CONCEPT_PARSER_PATH + "/" + "concept_parser.jar" + ":" + CONCEPT_PARSER_PATH + "/lib/*"
 CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept_parser"]
 INPUT_FILENAME = "yelp_academic_dataset_review.json"
@@ -93,6 +95,8 @@ def compute_polarity_scores():
             if not isinstance(subsentence_key, int):
                 continue
             sentence = sentence_dict[subsentence_key]['sentence']
+            #print sentence
+            #continue
             # use commandline
             proc = subprocess.Popen(
                 CONCEPT_PARSER_COMMAND_LIST,
@@ -145,6 +149,43 @@ def compute_polarity_scores():
             sentence_dict[subsentence_key]["tokens"] = tokens
             sentence_dict[subsentence_key]["POS"] = tagged
 
+            dep_polarity = 0.0
+            dep_count = 0
+            print "dep_polarity"
+            parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
+            graph = parser.tagged_parse(tagged)
+            print graph.tree().pprint()
+            for i,node in enumerate(graph.nodelist):
+                if node['word'] and TARGET_WORD in node['word']:
+                    for deps in graph.get_by_address(i)['deps']:
+                        currWord = tagged[deps - 1][0]
+                        currTag = tagged[deps - 1][1]
+                        print "evaluating: ", currWord, currTag
+                        if currTag in ("JJ", "JJS", "JJR", "NN", "NNS", "NNP"):
+                            currPolarity = compute_polarity(currWord)
+                            if currPolarity != 0:
+                                dep_polarity += currPolarity
+                                dep_count += 1
+                                print "dependency: ", currWord, currTag, currPolarity
+                    inverted = 1;
+                    path = graph.get_cycle_path(graph.root, i)
+                    path.reverse()
+                    for parents in path:
+                        currWord = tagged[parents - 1][0]
+                        currTag = tagged[parents - 1][1]
+                        print "evaluating: ", currWord, currTag
+                        if currWord in ("except", "not", "dont", "than", "no", "never"):
+                            inverted = -1 * inverted
+                            continue
+                        if currTag in ("VBN", "VBD", "VBZ", "VBP", "JJR", "JJ", "JJS"):
+                            currPolarity = inverted * compute_polarity(currWord)
+                            if currPolarity != 0:
+                                dep_polarity += currPolarity
+                                dep_count += 1
+                                print "parent: ", currWord, currTag, currPolarity
+            if dep_count > 0:
+                dep_polarity = dep_polarity / dep_count
+
             adj_polarity = 0.0
             adj_count = 0
             print "adj_polarity"
@@ -162,20 +203,30 @@ def compute_polarity_scores():
                 "stars": sentence_dict['stars'],
                 "polarity": average_polarity,
                 "adj_polarity": adj_polarity,
+                "dep_polarity": dep_polarity,
                 # "metadata": sentence_dict
             })
 
             print "stars: " + str(sentence_dict['stars'])
             print "polarity: " + str(average_polarity)
             print "adj_polarity: " + str(adj_polarity)
+            print "dep_polarity: " + str(dep_polarity)
 
+def stem(word):
+    for suffix in ['ing', 'ly', 'ed', 'ious', 'ies', 'ive', 'es', 's', 'ment']:
+        if word.endswith(suffix):
+            return word[:-len(suffix)]
+    return word
 
 
 def compute_polarity(subconcept):
+    subconcept = stem(subconcept)
+    
     """look up from a table if cached. Else just compute by taking the average of
     the polarity scores of all the corpus concepts that contain this subconcept."""
     if subconcept in cached_polarity:
         return cached_polarity[subconcept]
+
 
     # if len(subconcept) <= 2:
         # then it's probably a preposition
@@ -185,7 +236,7 @@ def compute_polarity(subconcept):
     count = 0
     polarity = 0.0
     for corpus_concept in global_concept_list:
-        if subconcept in corpus_concept:
+        if subconcept in corpus_concept.split("_"):
             count += 1
             polarity += sn.polarity(corpus_concept)
     if (count > 0):
@@ -208,6 +259,7 @@ def plot():
     x = map(lambda x:x["polarity"], pairs)
     y = map(lambda x:x["stars"], pairs)
     z = map(lambda x:x["adj_polarity"], pairs)
+    w = map(lambda x:x["dep_polarity"], pairs)
     fig, axScatter = plt.subplots(figsize=(5.5,5.5))
     axScatter.scatter(x, y)
     plt.title("polarity v.s. stars")
@@ -220,6 +272,11 @@ def plot():
     plt.draw()
     plt.show()
 
+    fig, axScatter = plt.subplots(figsize=(5.5,5.5))
+    axScatter.scatter(w, y)
+    plt.title("dep_polarity v.s. stars")
+    plt.draw()
+    plt.show()
 
 def main():
     # load_pairs()
@@ -229,7 +286,6 @@ def main():
     save_polarity()
     save_pairs()
     plot()
-    ipdb.set_trace()
 
 if __name__ == '__main__':
     main()
