@@ -18,7 +18,7 @@ INPUT_FILENAME = "yelp_academic_dataset_review.json"
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
 PAIRS_FILENAME = "pairs.txt"
-NUM_SAMPPLE = 48
+NUM_SAMPPLE = 10000
 NUM_TARGET_SENTENCES = 100
 TARGET_WORD = "burger".lower()
 
@@ -86,14 +86,14 @@ def filter_sentences():
 def compute_polarity_scores():
     num_sentence = len(filtered_sentences.keys())
     counter = 0
-    for sentence_key in filtered_sentences.keys():
+    for sentence_key in sorted(filtered_sentences):
         counter += 1
         print ""
         print "sentence#: " + str(counter) + "/" + str(num_sentence)
         sentence_dict = filtered_sentences[sentence_key]
         num_subsentence = len(filtered_sentences[sentence_key])
 
-        for subsentence_key in sentence_dict.keys():
+        for subsentence_key in sorted(sentence_dict):
             if not isinstance(subsentence_key, int):
                 continue
             sentence = sentence_dict[subsentence_key]['sentence']

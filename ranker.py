@@ -15,7 +15,7 @@ def main():
 
 def rate():
     num_sentence = len(process_reviews.filtered_sentences.keys())
-    for i,sentence_key in enumerate(process_reviews.filtered_sentences.keys()):
+    for i,sentence_key in enumerate(sorted(process_reviews.filtered_sentences.keys())):
         if i < beginRange or i > endRange:
             continue
         print "==============================="
