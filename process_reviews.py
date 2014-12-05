@@ -6,11 +6,12 @@ from senticnet.senticnet import Senticnet
 import subprocess
 import ipdb
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 
 # ==== CONFIGURATION ====
-CONCEPT_PARSER_PATH = "~/concept-parser"
-MALT_PARSER_PATH = "~/maltparser-1.8.1"
+CONCEPT_PARSER_PATH = os.getenv("HOME") + "/concept-parser"
+MALT_PARSER_PATH = os.getenv("HOME") + "/maltparser-1.8.1"
 LIB_PATH = CONCEPT_PARSER_PATH + "/" + "concept_parser.jar" + ":" + CONCEPT_PARSER_PATH + "/lib/*"
 CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept_parser"]
 INPUT_FILENAME = "yelp_academic_dataset_review.json"
