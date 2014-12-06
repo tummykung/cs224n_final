@@ -7,6 +7,7 @@ import subprocess
 import ipdb
 import numpy as np
 import os
+import sys
 import matplotlib.pyplot as plt
 
 # ==== CONFIGURATION ====
@@ -14,20 +15,17 @@ CONCEPT_PARSER_PATH = os.getenv("HOME") + "/concept-parser"
 MALT_PARSER_PATH = os.getenv("HOME") + "/maltparser-1.8.1"
 LIB_PATH = CONCEPT_PARSER_PATH + "/" + "concept_parser.jar" + ":" + CONCEPT_PARSER_PATH + "/lib/*"
 CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept_parser"]
-INPUT_FILENAME = "yelp_academic_dataset_review.json"
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
 PAIRS_FILENAME = "pairs.txt"
-NUM_SAMPLE = 10000
 NUM_TARGET_SENTENCES = 100
-TARGET_WORD = "burger".lower()
 
 # initialization
-filtered_sentences = {}
-inputs = []
-sentences = {}
-global_concept_list = []
+beginTrain = -1
 cached_polarity = {}
+endTrain = -1
+filtered_sentences = {}
+global_concept_list = []
 pairs = []
 sn = Senticnet() # you can call sn.concept(word), sn.polarity(word), sn.semantics(word), sn.sentics(word)
 # examples
@@ -53,10 +51,17 @@ def load_pairs():
             pairs.append(pair)
 
 def read_input():
-    with open(INPUT_FILENAME, 'r') as f:
-        for i in range(NUM_SAMPLE):
-            inputs.append(simplejson.loads(f.readline()))
-
+    with open(foodName + ".json", 'r') as f:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            currEntry = simplejson.loads(line)
+            currKey = currEntry["sentence_key"]
+            currSubKey = currEntry["subsentence_key"]
+            if not currKey in filtered_sentences:
+                filtered_sentences[currKey] = {}
+            filtered_sentences[currKey][currSubKey] = currEntry
     with open(CONCEPT_FILENAME, 'r') as f:
         for line in f:
             global_concept_list.append(line.strip().lower())
@@ -66,36 +71,23 @@ def read_input():
         for key in dictionary:
             cached_polarity[key] = dictionary[key]
 
-
-def filter_sentences():
-    # parse sentences and also make a filter of words of interest
-    for i in range(NUM_SAMPLE):
-        sentences[i] = map(lambda x: x.strip().lower(), inputs[i]['text'].split("."))
-        for j in range(len(sentences[i])):
-            if TARGET_WORD in sentences[i][j]:
-                if i not in filtered_sentences:
-                    filtered_sentences[i] = {
-                        'review_id': inputs[i]['review_id'],
-                        'stars': inputs[i]['stars'],
-                        'date': inputs[i]['date'],
-                        'business_id': inputs[i]['business_id'],
-                    }
-                filtered_sentences[i][j] = {'sentence': sentences[i][j]}
-
-
 def compute_polarity_scores():
     num_sentence = len(filtered_sentences.keys())
-    counter = 0
-    for sentence_key in sorted(filtered_sentences):
-        counter += 1
-        print ""
-        print "sentence#: " + str(counter) + "/" + str(num_sentence)
+    for i,sentence_key in enumerate(sorted(filtered_sentences)):
+        if i < beginTrain or i > endTrain:
+            continue
+        print
+        print "==============================="
+        print "sentence#: " + str(i) + " -- " + str(i - beginTrain + 1) +  "/" + str(endTrain - beginTrain + 1)
+        print
         sentence_dict = filtered_sentences[sentence_key]
-        num_subsentence = len(filtered_sentences[sentence_key])
+        subsentence_keys = sorted(filter(lambda x: isinstance(x, int), sentence_dict.keys()))
 
-        for subsentence_key in sorted(sentence_dict):
-            if not isinstance(subsentence_key, int):
-                continue
+        for j,subsentence_key in enumerate(subsentence_keys):
+            print
+            print "-------------------------------"
+            print "subsentence#: " + str(j + 1) + "/" + str(len(subsentence_keys))
+            print
             sentence = sentence_dict[subsentence_key]['sentence']
             #print sentence
             #continue
@@ -116,7 +108,7 @@ def compute_polarity_scores():
             average_polarity = 0.0
             total_count = 0
             for concept in concept_list:
-                if TARGET_WORD in concept:
+                if foodName in concept:
                     filtered_concept_list.append(concept)
                     print "\t" + concept
 
@@ -156,13 +148,13 @@ def compute_polarity_scores():
             print "dep_polarity"
             parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
             graph = parser.tagged_parse(tagged)
-            print graph.tree().pprint()
+            #print graph.tree().pprint()
             for i,node in enumerate(graph.nodelist):
-                if node['word'] and TARGET_WORD in node['word']:
+                if node['word'] and foodName in node['word']:
                     for deps in graph.get_by_address(i)['deps']:
                         currWord = tagged[deps - 1][0]
                         currTag = tagged[deps - 1][1]
-                        print "evaluating: ", currWord, currTag
+                #        print "evaluating: ", currWord, currTag
                         if currTag in ("JJ", "JJS", "JJR", "NN", "NNS", "NNP"):
                             currPolarity = compute_polarity(currWord)
                             if currPolarity != 0:
@@ -175,7 +167,7 @@ def compute_polarity_scores():
                     for parents in path:
                         currWord = tagged[parents - 1][0]
                         currTag = tagged[parents - 1][1]
-                        print "evaluating: ", currWord, currTag
+                #        print "evaluating: ", currWord, currTag
                         if currWord in ("except", "not", "dont", "than", "no", "never"):
                             inverted = -1 * inverted
                             continue
@@ -184,7 +176,7 @@ def compute_polarity_scores():
                             if currPolarity != 0:
                                 dep_polarity += currPolarity
                                 dep_count += 1
-                                print "parent: ", currWord, currTag, currPolarity
+                                #print "parent: ", currWord, currTag, currPolarity
             if dep_count > 0:
                 dep_polarity = dep_polarity / dep_count
 
@@ -202,14 +194,14 @@ def compute_polarity_scores():
             # print "average_adj_polarity: " + str(adj_polarity)
 
             pairs.append({
-                "stars": sentence_dict['stars'],
+                "rating": sentence_dict[subsentence_key]['rating'],
                 "polarity": average_polarity,
                 "adj_polarity": adj_polarity,
                 "dep_polarity": dep_polarity,
                 # "metadata": sentence_dict
             })
 
-            print "stars: " + str(sentence_dict['stars'])
+            print "rating: " + str(sentence_dict[subsentence_key]['rating'])
             print "polarity: " + str(average_polarity)
             print "adj_polarity: " + str(adj_polarity)
             print "dep_polarity: " + str(dep_polarity)
@@ -259,35 +251,46 @@ def save_pairs():
 
 def plot():
     x = map(lambda x:x["polarity"], pairs)
-    y = map(lambda x:x["stars"], pairs)
+    y = map(lambda x:x["rating"], pairs)
     z = map(lambda x:x["adj_polarity"], pairs)
     w = map(lambda x:x["dep_polarity"], pairs)
     fig, axScatter = plt.subplots(figsize=(5.5,5.5))
     axScatter.scatter(x, y)
-    plt.title("polarity v.s. stars")
+    plt.title("polarity v.s. rating")
     plt.draw()
     plt.show()
 
     fig, axScatter = plt.subplots(figsize=(5.5,5.5))
     axScatter.scatter(z, y)
-    plt.title("adj_polarity v.s. stars")
+    plt.title("adj_polarity v.s. rating")
     plt.draw()
     plt.show()
 
     fig, axScatter = plt.subplots(figsize=(5.5,5.5))
     axScatter.scatter(w, y)
-    plt.title("dep_polarity v.s. stars")
+    plt.title("dep_polarity v.s. rating")
     plt.draw()
     plt.show()
 
 def main():
     # load_pairs()
     read_input()
-    filter_sentences()
     compute_polarity_scores()
     save_polarity()
     save_pairs()
     plot()
 
 if __name__ == '__main__':
+    if len(sys.argv) != 4:
+        print "Invalid number of arguments, need: python process_reviews.py foodName beginTrain endTrain"
+        exit(0)
+    try:
+        foodName = sys.argv[1]
+        beginTrain = int(sys.argv[2])
+        endTrain = int(sys.argv[3])
+    except ValueError:
+        print "Bad input arguments!"
+        exit(0)
+
     main()
+
