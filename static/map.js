@@ -102,6 +102,15 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         redrawMap();
     };
 
+    $scope.change_food = function (food){
+
+        if (food == "burger") {
+            // something should happen here
+            // $scope.map.map.setCenter(vegas);
+        }
+        redrawMap();
+    };
+
     $scope.switchAxes = function (i, topAxis, rightAxis) {
         console.log('switchaxes');
         $scope.topAxis = capitaliseFirstLetter(topAxis);
@@ -178,7 +187,8 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         markers = [];
 
         function selectPolarity(element) {
-            return element['rating'] == $scope.polarity;
+            var epsilon = 0.3;
+            return Math.abs(element['rating'] - $scope.polarity/100) < epsilon;
         }
         var filteredData = $scope.data.filter(selectPolarity);
 
@@ -187,21 +197,18 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
 
             // if (i > 0) {
             var contentString = '<div id="content">'+
-              '<div id="siteNotice">'+
-              '</div>'+
-              '<h1 id="firstHeading" class="firstHeading">'+
-              review_emotion['sentence']
-              +'</h1>'+
+              '<div id="siteNotice">'+'</div>'+
+              '<h1 id="firstHeading" class="firstHeading">'+review_emotion['sentence']+'</h1>'+
+              '<h2>('+review_emotion['food']+')</h2>'+
               '<div id="bodyContent">'+
-              '<p><b>sentence polarity: </b>'+
-              review_emotion['rating']+
-              '</p>'+
-              '<p><b>review rating: </b>'+
-              review_emotion['stars']+
-              '</p>'+
-              '<p><b>business name: </b>'+
-              review_emotion['name']+
-              '</p>'+
+              '<p><b>sentence polarity: </b>'+review_emotion['rating']+'</p>'+
+              '<p><b>review rating: </b>'+review_emotion['stars']+'</p>'+
+              '<p><b>business name: </b>'+review_emotion['name']+'</p>'+
+              '<p><b>filtered concepts: </b>'+review_emotion['filtered_concepts']+'</p>'+
+              '<p><b>concepts: </b>'+review_emotion['concepts']+'</p>'+
+              '<p><b>dependency polarity: </b>'+review_emotion['dep_polarity']+'</p>'+
+              '<p><b>adjective polarity: </b>'+review_emotion['adj_polarity']+'</p>'+
+              '<p><b>votes: </b>'+JSON.stringify(review_emotion['votes'])+'</p>'+
               '</div>'+
               '</div>';
 
@@ -319,9 +326,8 @@ $(function() {
     $( ".polarity_slider" ).slider({
        orientation: "horizontal",
        value: 0,
-       min: -2,
-       max: 2,
-       step: 1,
+       min: -200,
+       max: 200,
        change: update
    }).each(function() {
         // Add labels to slider whose values 

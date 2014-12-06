@@ -17,8 +17,11 @@ LIB_PATH = CONCEPT_PARSER_PATH + "/" + "concept_parser.jar" + ":" + CONCEPT_PARS
 CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept_parser"]
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
-PAIRS_FILENAME = "pairs.txt"
+INPUT_FILENAME = "yelp_academic_dataset_review.json"
+BUSINESS_FILENAME = "yelp_academic_dataset_business.json"
 NUM_TARGET_SENTENCES = 100
+NUM_SAMPLE = 10000
+OUTPUT_FILE_PATH = ""
 
 # initialization
 beginTrain = -1
@@ -26,8 +29,11 @@ cached_polarity = {}
 endTrain = -1
 filtered_sentences = {}
 global_concept_list = []
-pairs = []
+results = []
 sn = Senticnet() # you can call sn.concept(word), sn.polarity(word), sn.semantics(word), sn.sentics(word)
+inputs = []
+businesses = []
+sentences = {}
 # examples
 # ========
 # In [12]: sn.concept("love")
@@ -44,11 +50,46 @@ sn = Senticnet() # you can call sn.concept(word), sn.polarity(word), sn.semantic
 #   'sensitivity': 0.0}}
 
 
-def load_pairs():
-    with open(PAIRS_FILENAME, 'r') as f:
-        pair_list = simplejson.loads(f.read())
-        for pair in pair_list:
-            pairs.append(pair)
+def load_results():
+    with open(OUTPUT_FILE_PATH, 'r') as f:
+        results = simplejson.loads(f.read())
+        for result in results:
+            results.append(pair)
+
+def original_read_input():
+    with open(INPUT_FILENAME, 'r') as f:
+        for i in range(NUM_SAMPLE):
+            inputs.append(simplejson.loads(f.readline()))
+    with open(CONCEPT_FILENAME, 'r') as f:
+        for line in f:
+            global_concept_list.append(line.strip().lower())
+
+    with open(POLARITY_FILENAME, 'r') as f:
+        dictionary = simplejson.loads(f.read())
+        for key in dictionary:
+            cached_polarity[key] = dictionary[key]
+
+    with open(BUSINESS_FILENAME, 'r') as f:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            businesses.append(simplejson.loads(line))
+
+def filter_sentences():
+    # parse sentences and also make a filter of words of interest
+    for i in range(NUM_SAMPLE):
+        sentences[i] = map(lambda x: x.strip().lower(), inputs[i]['text'].split("."))
+        for j in range(len(sentences[i])):
+            if foodName in sentences[i][j]:
+                if i not in filtered_sentences:
+                    filtered_sentences[i] = {
+                        'review_id': inputs[i]['review_id'],
+                        'stars': inputs[i]['stars'],
+                        'date': inputs[i]['date'],
+                        'business_id': inputs[i]['business_id'],
+                    }
+                filtered_sentences[i][j] = {'sentence': sentences[i][j]}
 
 def read_input():
     with open(foodName + ".json", 'r') as f:
@@ -73,7 +114,7 @@ def read_input():
 
 def compute_polarity_scores():
     num_sentence = len(filtered_sentences.keys())
-    for i,sentence_key in enumerate(sorted(filtered_sentences)):
+    for i, sentence_key in enumerate(sorted(filtered_sentences)):
         if i < beginTrain or i > endTrain:
             continue
         print
@@ -83,7 +124,7 @@ def compute_polarity_scores():
         sentence_dict = filtered_sentences[sentence_key]
         subsentence_keys = sorted(filter(lambda x: isinstance(x, int), sentence_dict.keys()))
 
-        for j,subsentence_key in enumerate(subsentence_keys):
+        for j, subsentence_key in enumerate(subsentence_keys):
             print
             print "-------------------------------"
             print "subsentence#: " + str(j + 1) + "/" + str(len(subsentence_keys))
@@ -193,15 +234,31 @@ def compute_polarity_scores():
             sentence_dict[subsentence_key]['adj_polarity'] = adj_polarity
             # print "average_adj_polarity: " + str(adj_polarity)
 
-            pairs.append({
-                "rating": sentence_dict[subsentence_key]['rating'],
+            business = filter(lambda x:x["business_id"] == inputs[sentence_key]["business_id"], businesses)[0]
+            results.append({
+                "rating": dep_polarity, # for now, we'll use the dep_polarity as the main rating
+                "type": "dep_polarity",
                 "polarity": average_polarity,
                 "adj_polarity": adj_polarity,
                 "dep_polarity": dep_polarity,
-                # "metadata": sentence_dict
+                "id": i,
+                "sentence": sentence,
+                "sentence_key": sentence_key,
+                "subsentence_key": subsentence_key,
+                "business_id": inputs[sentence_key]["business_id"],
+                "user_id": inputs[sentence_key]["user_id"],
+                "votes": inputs[sentence_key]["votes"],
+                "stars": inputs[sentence_key]["stars"],
+                "lng": business["longitude"],
+                "lat": business["latitude"],
+                "full_address": business["full_address"],
+                "name": business["name"],
+                "food": foodName,
+                "concepts": sentence_dict[subsentence_key]['full_concept'],
+                "filtered_concepts": sentence_dict[subsentence_key]['filtered_concept']
             })
 
-            print "rating: " + str(sentence_dict[subsentence_key]['rating'])
+            # print "rating: " + str(sentence_dict[subsentence_key]['rating'])
             print "polarity: " + str(average_polarity)
             print "adj_polarity: " + str(adj_polarity)
             print "dep_polarity: " + str(dep_polarity)
@@ -245,15 +302,15 @@ def save_polarity():
     with open(POLARITY_FILENAME, 'w') as f:
         f.write(simplejson.dumps(cached_polarity))
 
-def save_pairs():
-    with open(PAIRS_FILENAME, 'w') as f:
-        f.write(simplejson.dumps(pairs))
+def save_results():
+    with open(OUTPUT_FILE_PATH, 'w') as f:
+        f.write(simplejson.dumps(results))
 
 def plot():
-    x = map(lambda x:x["polarity"], pairs)
-    y = map(lambda x:x["rating"], pairs)
-    z = map(lambda x:x["adj_polarity"], pairs)
-    w = map(lambda x:x["dep_polarity"], pairs)
+    x = map(lambda x:x["polarity"], results)
+    y = map(lambda x:x["rating"], results)
+    z = map(lambda x:x["adj_polarity"], results)
+    w = map(lambda x:x["dep_polarity"], results)
     fig, axScatter = plt.subplots(figsize=(5.5,5.5))
     axScatter.scatter(x, y)
     plt.title("polarity v.s. rating")
@@ -273,14 +330,17 @@ def plot():
     plt.show()
 
 def main():
-    # load_pairs()
-    read_input()
+    load_results()
+    original_read_input()
+    filter_sentences()
+    # read_input()
     compute_polarity_scores()
     save_polarity()
-    save_pairs()
-    plot()
+    save_results()
+    # plot()
 
 if __name__ == '__main__':
+    "see results in static/test_data/sample_data.json"
     if len(sys.argv) != 4:
         print "Invalid number of arguments, need: python process_reviews.py foodName beginTrain endTrain"
         exit(0)
@@ -288,6 +348,7 @@ if __name__ == '__main__':
         foodName = sys.argv[1]
         beginTrain = int(sys.argv[2])
         endTrain = int(sys.argv[3])
+        OUTPUT_FILE_PATH = "static/test_data/sample_data.json"
     except ValueError:
         print "Bad input arguments!"
         exit(0)

@@ -34,16 +34,21 @@
         <option ng-click="change_city('edinburgh')">Edinburgh</option>
         <option ng-click="change_city('SF')">San Francisco</option>
       </select>
+
+      <label>Food:</label>
+      <select class="options">
+        <option ng-click="change_food('burger')">Burger</option>
+      </select>
+
       <div id="controls">
         <div class="control">
           <label class="control-label">sentiment polarity</label>
           <div class="polarity_slider" id="polarity"></div>
-          <ol class="slider-label">
+          <ol class="polarity-label">
             <li>-2</li>
-            <li>.</li>
-            <li>.</li>
-            <li>.</li>
-            <li>.</li>
+            <li>-1</li>
+            <li>0</li>
+            <li>1</li>
             <li>2</li>
           </ol>
         </div>

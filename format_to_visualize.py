@@ -28,8 +28,6 @@ def read_input():
             if not line:
                 break
             currEntry = simplejson.loads(line)
-            currKey = currEntry["sentence_key"]
-            currSubKey = currEntry["subsentence_key"]
             if not currKey in filtered_sentences:
                 filtered_sentences[currKey] = {}
             # filtered_sentences[currKey][currSubKey] = currEntry
@@ -48,6 +46,9 @@ def read_input():
             filtered_sentences[currKey][currSubKey]["full_address"] = business["full_address"]
             filtered_sentences[currKey][currSubKey]["lat"] = business["latitude"]
             filtered_sentences[currKey][currSubKey]["name"] = business["name"]
+            filtered_sentences[currKey][currSubKey]["filtered_concepts"] = []
+            filtered_sentences[currKey][currSubKey]["concepts"] = []
+            filtered_sentences[currKey][currSubKey]["type"] = "manual_label"
 
 def write():
     to_write = []
