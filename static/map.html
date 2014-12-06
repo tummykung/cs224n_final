@@ -51,6 +51,14 @@
           </ol>
         </div>
       </div>
+
+      <div>
+        <label class="control-label">gold data only?: </label>
+        <div class="controls">
+          <input type="checkbox" ng-model="gold_data">
+        </div>
+      </div>
+
       <label>Choose an emotion:</label>
       <select class="options">
         <option ng-repeat="option in options" ng-click="go(option[0], option[1], option[2], option[3], option[4])">{{capitaliseFirstLetter(option[4])}}</option>

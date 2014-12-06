@@ -179,8 +179,16 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
 
         function selectPolarity(element) {
             var epsilon = 0.3;
-            return (Math.abs(element['rating'] - $scope.polarity/100) < epsilon) && ($scope.food == element['food']);
+            var score_close_enough = Math.abs(element['rating'] - $scope.polarity/100) < epsilon;
+            var right_food = $scope.food == element['food'];
+            var manual_label = element['type'] == "manual_label";
+            var select = score_close_enough && right_food;
+            if ($scope.gold_data) {
+                select = select && manual_label
+            }
+            return select;
         }
+
         var filteredData = $scope.data.filter(selectPolarity);
 
         for (var i = 0; i < filteredData.length - 1; i++) {

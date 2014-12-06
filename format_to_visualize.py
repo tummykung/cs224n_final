@@ -5,9 +5,10 @@ inputs = []
 businesses = []
 INPUT_FILENAME = "yelp_academic_dataset_review.json"
 BUSINESS_FILENAME = "yelp_academic_dataset_business.json"
-# TARGET_FILENAME = "here.json"
-TARGET_FILENAME = "static/test_data/sample_data.json"
-NUM_SAMPLE = 10000
+# OUTPUT_FILE_PATH = "here.json"
+OUTPUT_FILE_PATH = "static/test_data/sample_data.json"
+food = "lobster"
+NUM_SAMPLE = 50000
 
 def original_read_input():
     with open(INPUT_FILENAME, 'r') as f:
@@ -22,12 +23,14 @@ def original_read_input():
             businesses.append(simplejson.loads(line))
 
 def read_input():
-    with open("burger.json", 'r') as f:
+    with open(food + ".json", 'r') as f:
         while True:
             line = f.readline()
             if not line:
                 break
             currEntry = simplejson.loads(line)
+            currKey = currEntry["sentence_key"]
+            currSubKey = currEntry["subsentence_key"]
             if not currKey in filtered_sentences:
                 filtered_sentences[currKey] = {}
             # filtered_sentences[currKey][currSubKey] = currEntry
@@ -49,15 +52,21 @@ def read_input():
             filtered_sentences[currKey][currSubKey]["filtered_concepts"] = []
             filtered_sentences[currKey][currSubKey]["concepts"] = []
             filtered_sentences[currKey][currSubKey]["type"] = "manual_label"
+            filtered_sentences[currKey][currSubKey]["food"] = food
 
 def write():
-    to_write = []
+    results = []
+    with open(OUTPUT_FILE_PATH, 'r') as f:
+        lines = simplejson.loads(f.read())
+        for result in lines:
+            results.append(result)
+
     for currKey in filtered_sentences:
         for subsentence_key in filtered_sentences[currKey]:
-            to_write.append(filtered_sentences[currKey][subsentence_key])
+            results.append(filtered_sentences[currKey][subsentence_key])
 
-    with open(TARGET_FILENAME, 'w') as f:
-        f.write(simplejson.dumps(to_write))
+    with open(OUTPUT_FILE_PATH, 'w') as f:
+        f.write(simplejson.dumps(results))
 
 def main():
     original_read_input()
