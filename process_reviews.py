@@ -19,6 +19,7 @@ CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
 PAIRS_FILENAME = "pairs.txt"
 NUM_TARGET_SENTENCES = 100
+VERBOSE = True
 
 # initialization
 beginTrain = -1
@@ -89,8 +90,6 @@ def compute_polarity_scores():
             print "subsentence#: " + str(j + 1) + "/" + str(len(subsentence_keys))
             print
             sentence = sentence_dict[subsentence_key]['sentence']
-            #print sentence
-            #continue
             # use commandline
             proc = subprocess.Popen(
                 CONCEPT_PARSER_COMMAND_LIST,
@@ -104,13 +103,15 @@ def compute_polarity_scores():
             print repr(output_list[0])
             concept_list = output_list[1:] # the first one is the input
             filtered_concept_list = []
-            print "concept_list:"
+            if VERBOSE:
+                print "concept_list:"
             average_polarity = 0.0
             total_count = 0
             for concept in concept_list:
                 if foodName in concept:
                     filtered_concept_list.append(concept)
-                    print "\t" + concept
+                    if VERBOSE:
+                        print "\t" + concept
 
                     # take an average of concept scores from the corpus
                     polarity = 0.0
@@ -120,7 +121,8 @@ def compute_polarity_scores():
 
                     # take the average
                     polarity = polarity/len(subconcepts)
-                    print "\t\tpolarity: " + str(polarity)
+                    if VERBOSE:
+                        print "\t\tpolarity: " + str(polarity)
 
                     total_count += 1
                     average_polarity += polarity
@@ -139,55 +141,63 @@ def compute_polarity_scores():
             # get a POS tree
             tokens = nltk.word_tokenize(sentence)
             tagged = nltk.pos_tag(tokens)
-            print "POS: " + repr(tagged)
+            if VERBOSE:
+                print "POS: " + repr(tagged)
             sentence_dict[subsentence_key]["tokens"] = tokens
             sentence_dict[subsentence_key]["POS"] = tagged
 
             dep_polarity = 0.0
             dep_count = 0
-            print "dep_polarity"
+            if VERBOSE:
+                print "dep_polarity"
             parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
             graph = parser.tagged_parse(tagged)
-            #print graph.tree().pprint()
+            if VERBOSE:
+                print graph.tree().pprint()
             for i,node in enumerate(graph.nodelist):
                 if node['word'] and foodName in node['word']:
                     for deps in graph.get_by_address(i)['deps']:
                         currWord = tagged[deps - 1][0]
                         currTag = tagged[deps - 1][1]
-                #        print "evaluating: ", currWord, currTag
-                        if currTag in ("JJ", "JJS", "JJR", "NN", "NNS", "NNP"):
+                        if VERBOSE:
+                            print "evaluating: ", currWord, currTag
+                        if currTag in ("JJ", "JJS", "JJR"):
                             currPolarity = compute_polarity(currWord)
                             if currPolarity != 0:
                                 dep_polarity += currPolarity
                                 dep_count += 1
-                                print "dependency: ", currWord, currTag, currPolarity
+                                if VERBOSE:
+                                    print "dependency: ", currWord, currTag, currPolarity
                     inverted = 1;
                     path = graph.get_cycle_path(graph.root, i)
                     path.reverse()
                     for parents in path:
                         currWord = tagged[parents - 1][0]
                         currTag = tagged[parents - 1][1]
-                #        print "evaluating: ", currWord, currTag
-                        if currWord in ("except", "not", "dont", "than", "no", "never"):
+                        if VERBOSE:
+                            print "evaluating: ", currWord, currTag
+                        if currWord in ("except", "but", "not", "dont", "than", "no", "never"):
                             inverted = -1 * inverted
-                            continue
-                        if currTag in ("VBN", "VBD", "VBZ", "VBP", "JJR", "JJ", "JJS"):
+                        elif currTag in ("RB", "VB", "VBN", "VBD", "VBZ", "VBP", "VBG", "JJR", "JJ", "JJS"):
                             currPolarity = inverted * compute_polarity(currWord)
                             if currPolarity != 0:
                                 dep_polarity += currPolarity
                                 dep_count += 1
-                                #print "parent: ", currWord, currTag, currPolarity
+                                if VERBOSE:
+                                    print "parent: ", currWord, currTag, currPolarity
             if dep_count > 0:
                 dep_polarity = dep_polarity / dep_count
 
             adj_polarity = 0.0
             adj_count = 0
-            print "adj_polarity"
+            if VERBOSE:
+                print "adj_polarity"
             for word, POS in tagged:
                 if POS in ("JJ", "JJS"):
                     adj_count += 1
                     adj_polarity += compute_polarity(word)
-                    print "\t\t" + word + ": " + str(adj_polarity)
+                    if VERBOSE:
+                        print "\t\t" + word + ": " + str(adj_polarity)
             if adj_count > 0:
                 adj_polarity = adj_polarity/adj_count
             sentence_dict[subsentence_key]['adj_polarity'] = adj_polarity
@@ -230,6 +240,10 @@ def compute_polarity(subconcept):
     count = 0
     polarity = 0.0
     for corpus_concept in global_concept_list:
+        if subconcept == corpus_concept:
+            count = 1
+            polarity = sn.polarity(corpus_concept)
+            break
         if subconcept in corpus_concept.split("_"):
             count += 1
             polarity += sn.polarity(corpus_concept)
