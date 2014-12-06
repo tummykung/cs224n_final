@@ -36,9 +36,7 @@
       </select>
 
       <label>Food:</label>
-      <select class="options">
-        <option ng-click="change_food('burger')">Burger</option>
-      </select>
+      <select ng-model="food" ng-options="food for food in food_list" class="options"></select>
 
       <div id="controls">
         <div class="control">

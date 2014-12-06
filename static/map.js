@@ -102,15 +102,6 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         redrawMap();
     };
 
-    $scope.change_food = function (food){
-
-        if (food == "burger") {
-            // something should happen here
-            // $scope.map.map.setCenter(vegas);
-        }
-        redrawMap();
-    };
-
     $scope.switchAxes = function (i, topAxis, rightAxis) {
         console.log('switchaxes');
         $scope.topAxis = capitaliseFirstLetter(topAxis);
@@ -188,7 +179,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
 
         function selectPolarity(element) {
             var epsilon = 0.3;
-            return Math.abs(element['rating'] - $scope.polarity/100) < epsilon;
+            return (Math.abs(element['rating'] - $scope.polarity/100) < epsilon) && ($scope.food == element['food']);
         }
         var filteredData = $scope.data.filter(selectPolarity);
 
@@ -256,6 +247,14 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     };
 
 
+    $scope.food_list = [
+        'burger',
+        'burrito',
+        'lobster',
+        'beer'
+    ];
+    $scope.food = "burger";
+
     $scope.pleasantness = 50;
     $scope.attention = 50;
     $scope.sensitivity = 50;
@@ -272,6 +271,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     // $scope.$watch('polarity', rePlot);
     // $scope.$watch('polarity', rePlot);
     $scope.$watch('data', redrawMap);
+    $scope.$watch('food', redrawMap);
 
 
 	// Setup click behavior.
