@@ -9,6 +9,7 @@ import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
+from optparse import OptionParser
 
 # ==== CONFIGURATION ====
 CONCEPT_PARSER_PATH = os.getenv("HOME") + "/concept-parser"
@@ -22,6 +23,7 @@ BUSINESS_FILENAME = "yelp_academic_dataset_business.json"
 NUM_TARGET_SENTENCES = 100
 NUM_SAMPLE = 10000
 OUTPUT_FILE_PATH = ""
+VERBOSE = True
 
 # initialization
 beginTrain = -1
@@ -52,9 +54,9 @@ sentences = {}
 
 def load_results():
     with open(OUTPUT_FILE_PATH, 'r') as f:
-        results = simplejson.loads(f.read())
-        for result in results:
-            results.append(pair)
+        lines = simplejson.loads(f.read())
+        for result in lines:
+            results.append(result)
 
 def original_read_input():
     with open(INPUT_FILENAME, 'r') as f:
@@ -130,8 +132,6 @@ def compute_polarity_scores():
             print "subsentence#: " + str(j + 1) + "/" + str(len(subsentence_keys))
             print
             sentence = sentence_dict[subsentence_key]['sentence']
-            #print sentence
-            #continue
             # use commandline
             proc = subprocess.Popen(
                 CONCEPT_PARSER_COMMAND_LIST,
@@ -145,13 +145,15 @@ def compute_polarity_scores():
             print repr(output_list[0])
             concept_list = output_list[1:] # the first one is the input
             filtered_concept_list = []
-            print "concept_list:"
+            if VERBOSE:
+                print "concept_list:"
             average_polarity = 0.0
             total_count = 0
             for concept in concept_list:
                 if foodName in concept:
                     filtered_concept_list.append(concept)
-                    print "\t" + concept
+                    if VERBOSE:
+                        print "\t" + concept
 
                     # take an average of concept scores from the corpus
                     polarity = 0.0
@@ -161,7 +163,8 @@ def compute_polarity_scores():
 
                     # take the average
                     polarity = polarity/len(subconcepts)
-                    print "\t\tpolarity: " + str(polarity)
+                    if VERBOSE:
+                        print "\t\tpolarity: " + str(polarity)
 
                     total_count += 1
                     average_polarity += polarity
@@ -180,55 +183,63 @@ def compute_polarity_scores():
             # get a POS tree
             tokens = nltk.word_tokenize(sentence)
             tagged = nltk.pos_tag(tokens)
-            print "POS: " + repr(tagged)
+            if VERBOSE:
+                print "POS: " + repr(tagged)
             sentence_dict[subsentence_key]["tokens"] = tokens
             sentence_dict[subsentence_key]["POS"] = tagged
 
             dep_polarity = 0.0
             dep_count = 0
-            print "dep_polarity"
+            if VERBOSE:
+                print "dep_polarity"
             parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
             graph = parser.tagged_parse(tagged)
-            #print graph.tree().pprint()
+            if VERBOSE:
+                print graph.tree().pprint()
             for i,node in enumerate(graph.nodelist):
                 if node['word'] and foodName in node['word']:
                     for deps in graph.get_by_address(i)['deps']:
                         currWord = tagged[deps - 1][0]
                         currTag = tagged[deps - 1][1]
-                #        print "evaluating: ", currWord, currTag
-                        if currTag in ("JJ", "JJS", "JJR", "NN", "NNS", "NNP"):
+                        if VERBOSE:
+                            print "evaluating: ", currWord, currTag
+                        if currTag in ("JJ", "JJS", "JJR"):
                             currPolarity = compute_polarity(currWord)
                             if currPolarity != 0:
                                 dep_polarity += currPolarity
                                 dep_count += 1
-                                print "dependency: ", currWord, currTag, currPolarity
+                                if VERBOSE:
+                                    print "dependency: ", currWord, currTag, currPolarity
                     inverted = 1;
                     path = graph.get_cycle_path(graph.root, i)
                     path.reverse()
                     for parents in path:
                         currWord = tagged[parents - 1][0]
                         currTag = tagged[parents - 1][1]
-                #        print "evaluating: ", currWord, currTag
-                        if currWord in ("except", "not", "dont", "than", "no", "never"):
+                        if VERBOSE:
+                            print "evaluating: ", currWord, currTag
+                        if currWord in ("except", "but", "not", "dont", "than", "no", "never"):
                             inverted = -1 * inverted
-                            continue
-                        if currTag in ("VBN", "VBD", "VBZ", "VBP", "JJR", "JJ", "JJS"):
+                        elif currTag in ("RB", "VB", "VBN", "VBD", "VBZ", "VBP", "VBG", "JJR", "JJ", "JJS"):
                             currPolarity = inverted * compute_polarity(currWord)
                             if currPolarity != 0:
                                 dep_polarity += currPolarity
                                 dep_count += 1
-                                #print "parent: ", currWord, currTag, currPolarity
+                                if VERBOSE:
+                                    print "parent: ", currWord, currTag, currPolarity
             if dep_count > 0:
                 dep_polarity = dep_polarity / dep_count
 
             adj_polarity = 0.0
             adj_count = 0
-            print "adj_polarity"
+            if VERBOSE:
+                print "adj_polarity"
             for word, POS in tagged:
                 if POS in ("JJ", "JJS"):
                     adj_count += 1
                     adj_polarity += compute_polarity(word)
-                    print "\t\t" + word + ": " + str(adj_polarity)
+                    if VERBOSE:
+                        print "\t\t" + word + ": " + str(adj_polarity)
             if adj_count > 0:
                 adj_polarity = adj_polarity/adj_count
             sentence_dict[subsentence_key]['adj_polarity'] = adj_polarity
@@ -287,6 +298,10 @@ def compute_polarity(subconcept):
     count = 0
     polarity = 0.0
     for corpus_concept in global_concept_list:
+        if subconcept == corpus_concept:
+            count = 1
+            polarity = sn.polarity(corpus_concept)
+            break
         if subconcept in corpus_concept.split("_"):
             count += 1
             polarity += sn.polarity(corpus_concept)
@@ -329,29 +344,42 @@ def plot():
     plt.draw()
     plt.show()
 
-def main():
-    load_results()
+def main(save):
+    if save:
+        load_results()
     original_read_input()
     filter_sentences()
     # read_input()
     compute_polarity_scores()
     save_polarity()
-    save_results()
+    if save:
+        save_results()
     # plot()
 
 if __name__ == '__main__':
-    "see results in static/test_data/sample_data.json"
-    if len(sys.argv) != 4:
+    print "use '--save_results static/test_data/sample_data.json' to append results there."
+    args = sys.argv[1:]
+    parser = OptionParser(usage=main.__doc__)
+    parser.add_option(
+        '--save_results',
+        dest="save",
+        default=None,
+    )
+    options, arguments = parser.parse_args(args)
+    if len(arguments) != 3:
         print "Invalid number of arguments, need: python process_reviews.py foodName beginTrain endTrain"
         exit(0)
     try:
-        foodName = sys.argv[1]
-        beginTrain = int(sys.argv[2])
-        endTrain = int(sys.argv[3])
-        OUTPUT_FILE_PATH = "static/test_data/sample_data.json"
+        foodName = arguments[0]
+        beginTrain = int(arguments[1])
+        endTrain = int(arguments[2])
+        OUTPUT_FILE_PATH = options.save
     except ValueError:
         print "Bad input arguments!"
         exit(0)
 
-    main()
+    save = False
+    if (options.save):
+        save = True
+    main(save)
 
