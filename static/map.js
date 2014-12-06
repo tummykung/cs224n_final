@@ -182,7 +182,12 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
             var score_close_enough = Math.abs(element['rating'] - $scope.polarity/100) < epsilon;
             var right_food = $scope.food == element['food'];
             var manual_label = element['type'] == "manual_label";
-            var select = score_close_enough && right_food;
+
+            var select = right_food;
+
+            if (!$scope.see_all) {
+                select = select && score_close_enough;
+            }
             if ($scope.gold_data) {
                 select = select && manual_label
             }
@@ -280,6 +285,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     // $scope.$watch('polarity', rePlot);
     $scope.$watch('data', redrawMap);
     $scope.$watch('food', redrawMap);
+    $scope.$watch('see_all', redrawMap);
 
 
 	// Setup click behavior.
