@@ -22,7 +22,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
 	$scope.map = init_gmap(document.getElementById("map-canvas"));
     $scope.data = [];
     $scope.capitaliseFirstLetter = capitaliseFirstLetter;
-    $scope.distances = [];
+    $scope.scores = [];
 
     $scope.topAxis = 'pleasantness';
     $scope.rightAxis = 'attention';
@@ -30,7 +30,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     $.ajax({
         type: 'GET',
         dataType: 'json',
-        url: 'test_data/test_data.json',
+        url: 'test_data/sample_data.json',
         success: function (data) {
             $scope.$apply(function() {
                 $scope.data = data;
@@ -76,6 +76,32 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         $( "#aptitude" ).slider( "value", e4 );
     };
 
+    $scope.change_city = function (city){
+
+        var vegas = new google.maps.LatLng(36.1215, -115.1739);
+        var phoenix = new google.maps.LatLng(33.4500, -112.0667);
+        var madison = new google.maps.LatLng(43.0667, -89.4000);
+        var waterloo = new google.maps.LatLng(43.4667, -80.5167);
+        var edinburgh = new google.maps.LatLng(26.3042, -98.1639);
+        var SF = new google.maps.LatLng(37.7833, -122.4167);
+
+        if (city == "vegas") {
+            $scope.map.map.setCenter(vegas);
+        } else if (city == "phoenix") {
+            $scope.map.map.setCenter(phoenix);
+        } else if (city == "madison") {
+            $scope.map.map.setCenter(madison);
+        } else if (city == "waterloo") {
+            $scope.map.map.setCenter(waterloo);
+        } else if (city == "edinburgh") {
+            $scope.map.map.setCenter(edinburgh);
+        }
+        else if (city == "SF") {
+            $scope.map.map.setCenter(SF);
+        }
+        redrawMap();
+    };
+
     $scope.switchAxes = function (i, topAxis, rightAxis) {
         console.log('switchaxes');
         $scope.topAxis = capitaliseFirstLetter(topAxis);
@@ -89,70 +115,157 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
 
     colorFader = function (elem, startColor, endColor) {
         return function (newValue, oldValue) {
-                var sliderValue = (newValue / 100.0); //* 2 - 1;
-                var sliderIntensity = Math.abs(sliderValue);
-                var r, g, b;
-                // if (sliderValue <= 0) {
-                //     r = startColor[0];
-                //     g = startColor[1];
-                //     b = startColor[2];
-                // } else {
-                //     r = endColor[0];
-                //     g = endColor[1];
-                //     b = endColor[2];
-                // }
-                // r = Math.floor(sliderIntensity * r + (1 - sliderIntensity) * 255);
-                // g = Math.floor(sliderIntensity * g + (1 - sliderIntensity) * 255);
-                // b = Math.floor(sliderIntensity * b + (1 - sliderIntensity) * 255);
-                r = Math.floor(sliderIntensity * endColor[0] +
-                   (1 - sliderIntensity) * startColor[0]);
-                g = Math.floor(sliderIntensity * endColor[1] +
-                   (1 - sliderIntensity) * startColor[1]);
-                b = Math.floor(sliderIntensity * endColor[2] +
-                   (1 - sliderIntensity) * startColor[2]);
-                elem.css("background-color", "rgb(" + r + "," + g + "," + b + ")");
-                recalcData();
-            };
+            var sliderValue = (newValue / 100.0); //* 2 - 1;
+            var sliderIntensity = Math.abs(sliderValue);
+            var r, g, b;
+            // if (sliderValue <= 0) {
+            //     r = startColor[0];
+            //     g = startColor[1];
+            //     b = startColor[2];
+            // } else {
+            //     r = endColor[0];
+            //     g = endColor[1];
+            //     b = endColor[2];
+            // }
+            // r = Math.floor(sliderIntensity * r + (1 - sliderIntensity) * 255);
+            // g = Math.floor(sliderIntensity * g + (1 - sliderIntensity) * 255);
+            // b = Math.floor(sliderIntensity * b + (1 - sliderIntensity) * 255);
+            r = Math.floor(sliderIntensity * endColor[0] +
+               (1 - sliderIntensity) * startColor[0]);
+            g = Math.floor(sliderIntensity * endColor[1] +
+               (1 - sliderIntensity) * startColor[1]);
+            b = Math.floor(sliderIntensity * endColor[2] +
+               (1 - sliderIntensity) * startColor[2]);
+            elem.css("background-color", "rgb(" + r + "," + g + "," + b + ")");
+            recalcData();
         };
+    };
 
-        recalcData = function () {
-            var distances = [];
+    recalcData = function () {
+        var scores = [];
 
-            var pleasantness = ($scope.pleasantness / 100.0) * 2 - 1;
-            var aptitude = ($scope.aptitude / 100.0) * 2 - 1;
-            var attention = ($scope.attention / 100.0) * 2 - 1;
-            var sensitivity = ($scope.sensitivity / 100.0) * 2 - 1;
+        var pleasantness = ($scope.pleasantness / 100.0) * 2 - 1;
+        var aptitude = ($scope.aptitude / 100.0) * 2 - 1;
+        var attention = ($scope.attention / 100.0) * 2 - 1;
+        var sensitivity = ($scope.sensitivity / 100.0) * 2 - 1;
 
-            for (var i = 0; i < $scope.data.length; i++) {
-                var review_emotion = $scope.data[i];
-                var distance = $scope.compute_distance(review_emotion,
-                 {pleasantness: pleasantness,
-                    aptitude: aptitude,
-                    attention: attention,
-                    sensitivity: sensitivity});
-                distances.push({location: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
-                    weight: Math.pow(3 * (Math.min(1e3, 1.0 / distance)), 4)});
+        for (var i = 0; i < $scope.data.length; i++) {
+            var review_emotion = $scope.data[i];
+            var distance = $scope.compute_distance(review_emotion,
+             {pleasantness: pleasantness,
+                aptitude: aptitude,
+                attention: attention,
+                sensitivity: sensitivity});
+            scores.push({
+                location: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
+                weight: Math.pow(3 * (Math.min(1e3, 1.0 / distance)), 4)
+            });
+        }
+        $scope.scores = scores;
+    };
+
+
+    google.maps.event.addListener($scope.map.map, 'click', function(event) {
+        if($scope.prev_infowindow) {
+            $scope.prev_infowindow.close();
+        };
+    });
+
+    markers = [];
+
+    rePlot = function () {
+        var scores = [];
+        markers = [];
+
+        function selectPolarity(element) {
+            return element['rating'] == $scope.polarity;
+        }
+        var filteredData = $scope.data.filter(selectPolarity);
+
+        for (var i = 0; i < filteredData.length - 1; i++) {
+            var review_emotion = filteredData[i];
+
+            // if (i > 0) {
+            var contentString = '<div id="content">'+
+              '<div id="siteNotice">'+
+              '</div>'+
+              '<h1 id="firstHeading" class="firstHeading">'+
+              review_emotion['sentence']
+              +'</h1>'+
+              '<div id="bodyContent">'+
+              '<p><b>sentence polarity: </b>'+
+              review_emotion['rating']+
+              '</p>'+
+              '<p><b>review rating: </b>'+
+              review_emotion['stars']+
+              '</p>'+
+              '<p><b>business name: </b>'+
+              review_emotion['name']+
+              '</p>'+
+              '</div>'+
+              '</div>';
+
+            var marker = new google.maps.Marker({
+                position: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
+                map: $scope.map.map,
+                title: 'Review Sentiment'
+            });
+
+            markers[i] = marker;
+
+            closure(marker, contentString);
+
+            scores.push({
+                location: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
+                weight: (review_emotion['rating'] + 3) * 10
+            });
+        }
+        $scope.scores = scores;
+    }
+
+    $scope.prev_infowindow = false; 
+
+    function closure(marker, contentString) {
+        var infowindow = new google.maps.InfoWindow({
+            content: contentString
+        });
+
+
+        google.maps.event.addListener(marker, 'click', function(event) {
+            if($scope.prev_infowindow) {
+                $scope.prev_infowindow.close();
             }
+            $scope.prev_infowindow = infowindow;
+            infowindow.open($scope.map.map, marker);
+        });
+    }
 
-            $scope.distances = distances;
-        };
+    redrawMap = function () {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        $scope.map.heatmap.setData($scope.scores);
+        rePlot();
+    };
 
-        redrawMap = function () {
-            console.log($scope.distances);
-            $scope.map.heatmap.setData($scope.distances);
-        };
 
-        $scope.pleasantness = 50;
-        $scope.attention = 50;
-        $scope.sensitivity = 50;
-        $scope.aptitude = 50;
-        $scope.$watch('pleasantness', colorFader($('#pleasantness'), [143, 236, 106], [50, 150, 50]));
-        $scope.$watch('attention', colorFader($('#attention'), [253, 255, 115], [240, 80, 0]));
-        $scope.$watch('sensitivity', colorFader($('#sensitivity'), [153, 120, 215], [20, 53, 173]));
-        $scope.$watch('aptitude', colorFader($('#aptitude'), [252, 0, 46], [189, 6, 39]));
+    $scope.pleasantness = 50;
+    $scope.attention = 50;
+    $scope.sensitivity = 50;
+    $scope.aptitude = 50;
+    $scope.polarity = 0;
+    $scope.$watch('pleasantness', colorFader($('#pleasantness'), [143, 236, 106], [50, 150, 50]));
+    $scope.$watch('attention', colorFader($('#attention'), [253, 255, 115], [240, 80, 0]));
+    $scope.$watch('sensitivity', colorFader($('#sensitivity'), [153, 120, 215], [20, 53, 173]));
+    $scope.$watch('aptitude', colorFader($('#aptitude'), [252, 0, 46], [189, 6, 39]));
 
-        $scope.$watch('data', recalcData);
-        $scope.$watch('distances', redrawMap);
+    // $scope.$watch('polarity', colorFader($('#polarity'), [0, 0, 0], [255, 255, 255]));
+
+    $scope.$watch('polarity', redrawMap);
+    // $scope.$watch('polarity', rePlot);
+    // $scope.$watch('polarity', rePlot);
+    $scope.$watch('data', redrawMap);
+
 
 	// Setup click behavior.
 	google.maps.event.addListener($scope.map.map, 'click', function(event) {
@@ -165,17 +278,19 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
 	});
 
 	$scope.refreshMap = function() {
-		var pleasantness = $( "#pleasantness" ).slider( "value" ),
+		pleasantness = $( "#pleasantness" ).slider( "value" ),
 		attention = $( "#attention" ).slider( "value" ),
 		sensitivity = $( "#sensitivity" ).slider( "value" ),
 		aptitude = $( "#aptitude" ).slider( "value" );
+        polarity = $( "#polarity" ).slider( "value" );
 
 		$scope.pleasantness = pleasantness;
 		$scope.attention = attention;
 		$scope.sensitivity = sensitivity;
 		$scope.aptitude = aptitude;
+        $scope.polarity = polarity;
 
-	    $scope.distance = 0; //$scope.compute_distance({'pleasantness': 50, 'attention': 50, 'sensitivity': 50, 'aptitude': 50});
+	    $scope.score = 0; //$scope.compute_distance({'pleasantness': 50, 'attention': 50, 'sensitivity': 50, 'aptitude': 50});
 	};
 
     $scope.compute_distance = function(input1, input2) {
@@ -194,12 +309,41 @@ $(document).ready(function () {
 });
 
 $(function() {
-	$( ".slider" ).slider({
+    $( ".slider" ).slider({
        orientation: "horizontal",
        value: 50,
        max: 100,
        change: update
    });
+
+    $( ".polarity_slider" ).slider({
+       orientation: "horizontal",
+       value: 0,
+       min: -2,
+       max: 2,
+       step: 1,
+       change: update
+   }).each(function() {
+        // Add labels to slider whose values 
+        // are specified by min, max
+
+        // Get the options for this slider (specified above)
+        var opt = $(this).data().uiSlider.options;
+
+        // Get the number of possible values
+        var vals = opt.max - opt.min;
+
+        // Position the labels
+        for (var i = 0; i <= vals; i++) {
+
+            // Create a new element and position it with percentages
+            var el = $('<label>' + (i + opt.min) + '</label>').css('left', (i/vals*100) + '%');
+
+            // Add the element inside #slider
+            $("#slider").append(el);
+
+        }
+    });
 
 	function update() {
 		$(".left-bar").click();

@@ -62,6 +62,10 @@ h2 {
   margin: 10px;
 }
 
+.polarity_slider {
+  margin: 10px;
+}
+
 /* red */
 #pleasantness {
   background: #ef2929;

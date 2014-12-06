@@ -11,7 +11,6 @@
   <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
   <script src="https://datejs.googlecode.com/svn/trunk/build/date.js"></script>
-  <script type="text/javascript" src="test_data/test_data.json"></script>
   <!-- tum's Google API code -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQP8iumU9nDYFn7w3O-L-ivVfYp_3a-GU&sensor=false&libraries=visualization"></script>
   <script src="admin.js"></script>
@@ -25,6 +24,29 @@
         <canvas id="mainCanvas" width="200" height="65" style="position:absolute; float: left"></canvas>
         <h1 style="float:right">Sentiment Analysis</h1>
         <h2 style="float:right; margin-top: 0">Tum and Raphael</h2>
+      </div>
+      <label>City:</label>
+      <select class="options">
+        <option ng-click="change_city('vegas')">Las Vegas</option>
+        <option ng-click="change_city('phoenix')">Phoenix</option>
+        <option selected="selected" ng-click="change_city('madison')">Madison</option>
+        <option ng-click="change_city('waterloo')">Waterloo</option>
+        <option ng-click="change_city('edinburgh')">Edinburgh</option>
+        <option ng-click="change_city('SF')">San Francisco</option>
+      </select>
+      <div id="controls">
+        <div class="control">
+          <label class="control-label">sentiment polarity</label>
+          <div class="polarity_slider" id="polarity"></div>
+          <ol class="slider-label">
+            <li>-2</li>
+            <li>.</li>
+            <li>.</li>
+            <li>.</li>
+            <li>.</li>
+            <li>2</li>
+          </ol>
+        </div>
       </div>
       <label>Choose an emotion:</label>
       <select class="options">
