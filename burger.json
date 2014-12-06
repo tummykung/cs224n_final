@@ -42,7 +42,7 @@
 {"rating": 1, "subsentence_key": 15, "sentence_key": 573, "id": 19, "sentence": "the patty melt is just a burger on bread, so obviously it rules hard"}
 {"rating": 1, "subsentence_key": 0, "sentence_key": 574, "id": 20, "sentence": "great burgers, sad fish"}
 {"rating": 1, "subsentence_key": 3, "sentence_key": 574, "id": 20, "sentence": "i ordered the fish, when the food came to the table i saw beautiful hand pattied burgers, hand dipped onion rings, then came my fish"}
-{"rating": 1, "subsentence_key": 6, "sentence_key": 574, "id": 20, "sentence": "today we made a second trip and i ordered the burger and onion rings"}
+{"rating": 0, "subsentence_key": 6, "sentence_key": 574, "id": 20, "sentence": "today we made a second trip and i ordered the burger and onion rings"}
 {"rating": 1, "subsentence_key": 5, "sentence_key": 575, "id": 21, "sentence": "their burgers are top notch as well"}
 {"rating": 1, "subsentence_key": 0, "sentence_key": 593, "id": 22, "sentence": "4 stars for hardee's ?!?  it's no culver's by a long shot but that thick burger was damn tasty !   i don't know if the restaurant was clean but the drive thru service was good"}
 {"rating": 1, "subsentence_key": 2, "sentence_key": 594, "id": 23, "sentence": "the burgers are really good, the best fast-food burgers in my opinion (yes, better than culvers, gasp), and the fries are excellent as well"}
@@ -86,7 +86,7 @@
 {"rating": -1, "subsentence_key": 1, "sentence_key": 652, "id": 45, "sentence": "the burgers are okay, but there are better ones in madison"}
 {"rating": -1, "subsentence_key": 3, "sentence_key": 652, "id": 45, "sentence": "our burgers were unremarkable - not that flavorful or moist"}
 {"rating": -1, "subsentence_key": 10, "sentence_key": 652, "id": 45, "sentence": "they charge extra for everything - ranch on the side, cheese on a burger - everything"}
-{"rating": 1, "subsentence_key": 1, "sentence_key": 653, "id": 46, "sentence": "the gritty burgers are something of an acquired taste"}
+{"rating": 0, "subsentence_key": 1, "sentence_key": 653, "id": 46, "sentence": "the gritty burgers are something of an acquired taste"}
 {"rating": 0, "subsentence_key": 3, "sentence_key": 653, "id": 46, "sentence": "they do have good flavor but are somewhat messy and there are better burgers than the gritty"}
 {"rating": 1, "subsentence_key": 6, "sentence_key": 653, "id": 46, "sentence": "but i would stop by again for the gritty burger"}
 {"rating": 0, "subsentence_key": 7, "sentence_key": 653, "id": 46, "sentence": "i recently learned that the gritty burger recipe was changed in the 80s sometime?   correct me if i'm wrong"}
