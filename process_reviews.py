@@ -22,6 +22,7 @@ results = []
 inputs = []
 businesses = []
 sentences = {}
+human = False
 # examples
 # ========
 # In [12]: sn.concept("love")
@@ -64,6 +65,8 @@ def filter_sentences():
 # parse sentences and also make a filter of words of interest
 def read_raw():
     print "Reading directly from raw yelp data"
+    global human
+    human = False
     i = 0
     hitCounter = 0
     while hitCounter < endTrain:
@@ -84,6 +87,8 @@ def read_raw():
 
 def read_human_labeled():
     print "Reading from human-labeled data"
+    global human
+    human = True
     with open(foodName + ".json", 'r') as f:
         while True:
             line = f.readline()
@@ -120,13 +125,13 @@ def compute_polarity_scores():
 
             business = filter(lambda x:x["business_id"] == inputs[sentence_key]["business_id"], businesses)[0]
             results.append({
-                "rating": dep_polarity, # for now, we'll use the dep_polarity as the main rating
-                "type": "dep_polarity",
+                "rating": sentence_dict[subsentence_key]['rating'] if human else dep_polarity,
+                "type": "manual_label" if human else "dep_polarity",
                 "polarity": concept_polarity,
                 "adj_polarity": adj_polarity,
                 "dep_polarity": dep_polarity,
                 "id": i,
-                "sentence": sentence,
+                "sentence": sentence.str_val,
                 "sentence_key": sentence_key,
                 "subsentence_key": subsentence_key,
                 "business_id": inputs[sentence_key]["business_id"],
