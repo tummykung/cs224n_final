@@ -128,7 +128,7 @@ def compute_polarity_scores():
             results.append({
                 "rating": sentence_dict[subsentence_key]['rating'] if human else dep_polarity,
                 "type": "manual_label" if human else "dep_polarity",
-                "polarity": concept_polarity,
+                "concept_polarity": concept_polarity,
                 "adj_polarity": adj_polarity,
                 "dep_polarity": dep_polarity,
                 "id": i,
@@ -149,7 +149,7 @@ def compute_polarity_scores():
             })
 
             # print "rating: " + str(sentence_dict[subsentence_key]['rating'])
-            print "polarity: " + str(concept_polarity)
+            print "concept_polarity: " + str(concept_polarity)
             print "adj_polarity: " + str(adj_polarity)
             print "dep_polarity: " + str(dep_polarity)
 
@@ -160,13 +160,13 @@ def save_results():
         f.write(simplejson.dumps(results))
 
 def plot():
-    x = map(lambda x:x["polarity"], results)
+    x = map(lambda x:x["concept_polarity"], results)
     y = map(lambda x:x["rating"], results)
     z = map(lambda x:x["adj_polarity"], results)
     w = map(lambda x:x["dep_polarity"], results)
     fig, axScatter = plt.subplots(figsize=(5.5,5.5))
     axScatter.scatter(x, y)
-    plt.title("polarity v.s. rating")
+    plt.title("concept_polarity v.s. rating")
     plt.draw()
     plt.show()
 
