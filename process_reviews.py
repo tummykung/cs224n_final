@@ -119,7 +119,7 @@ def compute_polarity_scores():
             print "-------------------------------"
             print "subsentence#: " + str(j + 1) + "/" + str(len(subsentence_keys))
             print
-            sentence = Sentence(sentence_dict[subsentence_key]['sentence'])
+            sentence = Sentence(sentence_dict[subsentence_key]['sentence'], sentence_key, subsentence_key)
             concept_polarity, filtered_concept_list = polarity.compute_concept_polarity(foodName, sentence)
             adj_polarity = polarity.compute_adj_polarity(foodName, sentence)
             dep_polarity = polarity.compute_dep_polarity(foodName, sentence)
@@ -189,6 +189,8 @@ def main(save):
     filter_sentences()
     compute_polarity_scores()
     polarity.cache_polarity()
+    Sentence.cache_parses()
+    Sentence.cache_concepts()
     if save:
         save_results()
     # plot()

@@ -1,12 +1,12 @@
 import os
 import nltk
 import simplejson
+import ipdb
 from sentence import Sentence
 from senticnet.senticnet import Senticnet
 
 # ==== CONFIGURATION ====
 CONCEPT_FILENAME = "concept_list.txt"
-MALT_PARSER_PATH = os.getenv("HOME") + "/maltparser-1.8.1"
 POLARITY_FILENAME = "polarity.txt"
 VERBOSE = True
 
@@ -81,13 +81,13 @@ def compute_adj_polarity(foodName, sentence):
 
 
 def compute_dep_polarity(foodName, sentence):
+
     tagged = sentence.getPOS()
+    graph = sentence.getGraph()
     dep_polarity = 0.0
     dep_count = 0
     if VERBOSE:
         print "dep_polarity"
-    parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
-    graph = parser.tagged_parse(tagged)
     if VERBOSE:
         print graph.tree().pprint()
     for i,node in enumerate(graph.nodelist):
