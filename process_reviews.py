@@ -39,11 +39,12 @@ human = False
 #   'sensitivity': 0.0}}
 
 
-def load_results():
-    with open(OUTPUT_FILE_PATH, 'r') as f:
+def load_results(filepath):
+    with open(filepath, 'r') as f:
         lines = simplejson.loads(f.read())
         for result in lines:
             results.append(result)
+    return results
 
 def read_input():
     with open(INPUT_FILENAME, 'r') as f:
@@ -183,7 +184,7 @@ def plot():
 
 def main(save):
     if save:
-        load_results()
+        load_results(OUTPUT_FILE_PATH)
     read_input()
     filter_sentences()
     compute_polarity_scores()

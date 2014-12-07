@@ -27,9 +27,9 @@
       </div>
       <label>City:</label>
       <select class="options">
-        <option ng-click="change_city('vegas')">Las Vegas</option>
-        <option ng-click="change_city('phoenix')">Phoenix</option>
         <option selected="selected" ng-click="change_city('madison')">Madison</option>
+        <option ng-click="change_city('phoenix')">Phoenix</option>
+        <option ng-click="change_city('vegas')">Las Vegas</option>
         <option ng-click="change_city('waterloo')">Waterloo</option>
         <option ng-click="change_city('edinburgh')">Edinburgh</option>
         <option ng-click="change_city('SF')">San Francisco</option>
@@ -56,6 +56,11 @@
         <label class="control-label">gold data only?: </label>
         <div class="controls">
           <input type="checkbox" ng-model="gold_data">
+        </div>
+
+        <label class="control-label">see all samples</label>
+        <div class="controls">
+          <input type="checkbox" ng-model="see_all">
         </div>
       </div>
 

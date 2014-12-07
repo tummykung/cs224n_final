@@ -7,7 +7,7 @@ INPUT_FILENAME = "yelp_academic_dataset_review.json"
 BUSINESS_FILENAME = "yelp_academic_dataset_business.json"
 # OUTPUT_FILE_PATH = "here.json"
 OUTPUT_FILE_PATH = "static/test_data/sample_data.json"
-food = "lobster"
+food = "burrito"
 NUM_SAMPLE = 50000
 
 def original_read_input():
