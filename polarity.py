@@ -4,6 +4,7 @@ import simplejson
 import ipdb
 from sentence import Sentence
 from senticnet.senticnet import Senticnet
+from httplib import BadStatusLine
 
 # ==== CONFIGURATION ====
 CONCEPT_FILENAME = "concept_list.txt"
@@ -148,11 +149,23 @@ def _compute_polarity(subconcept):
     for corpus_concept in global_concept_list:
         if subconcept == corpus_concept:
             count = 1
-            polarity = sn.polarity(corpus_concept)
+            gotIt = False
+            while not gotIt: 
+                try:
+                    polarity = sn.polarity(corpus_concept)
+                    gotIt = True
+                except BadStatusLine:
+                    print "Time out on polarity fetch for ", corpus_concept, " retrying..."
             break
         if subconcept in corpus_concept.split("_"):
             count += 1
-            polarity += sn.polarity(corpus_concept)
+            gotIt = False
+            while not gotIt: 
+                try:
+                    polarity += sn.polarity(corpus_concept)
+                    gotIt = True
+                except BadStatusLine:
+                    print "Time out on polarity fetch for ", corpus_concept, " retrying..."
     if (count > 0):
         # take the average
         polarity = polarity/count
