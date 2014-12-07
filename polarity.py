@@ -116,7 +116,7 @@ def compute_dep_polarity(foodName, sentence):
                     print "evaluating: ", currWord, currTag
                 if currWord in ("except", "but", "not", "dont", "than", "no", "never"):
                     inverted = -1 * inverted
-                elif currTag in ("RB", "VB", "VBN", "VBD", "VBZ", "VBP", "VBG", "JJR", "JJ", "JJS"):
+                else:
                     currPolarity = inverted * _compute_polarity(currWord)
                     if currPolarity != 0:
                         dep_polarity += currPolarity
