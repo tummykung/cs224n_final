@@ -148,7 +148,8 @@ def compute_polarity_scores():
                 "filtered_concepts": filtered_concept_list
             })
 
-            # print "rating: " + str(sentence_dict[subsentence_key]['rating'])
+            if human:
+                print "rating: " + str(sentence_dict[subsentence_key]['rating'])
             print "concept_polarity: " + str(concept_polarity)
             print "adj_polarity: " + str(adj_polarity)
             print "dep_polarity: " + str(dep_polarity)
@@ -182,15 +183,24 @@ def plot():
     plt.draw()
     plt.show()
 
+def load_caches():
+    polarity.load_cached_polarity()
+    Sentence.load_cached_parses()
+    Sentence.load_cached_concepts()
+
+def save_caches():
+    polarity.cache_polarity()
+    Sentence.cache_parses()
+    Sentence.cache_concepts()
+
 def main(save):
     if save:
         load_results(OUTPUT_FILE_PATH)
     read_input()
+    load_caches()
     filter_sentences()
     compute_polarity_scores()
-    polarity.cache_polarity()
-    Sentence.cache_parses()
-    Sentence.cache_concepts()
+    save_caches()
     if save:
         save_results()
     # plot()

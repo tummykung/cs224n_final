@@ -8,7 +8,7 @@ from senticnet.senticnet import Senticnet
 # ==== CONFIGURATION ====
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
-VERBOSE = True
+VERBOSE = False
 
 # initialization
 cached_polarity = {}
@@ -20,6 +20,7 @@ def cache_polarity():
         f.write(simplejson.dumps(cached_polarity))
 
 def load_cached_polarity():
+    print "Loading polarity cache"
     with open(POLARITY_FILENAME, 'r') as f:
         dictionary = simplejson.loads(f.read())
         for key in dictionary:
@@ -127,9 +128,6 @@ def compute_dep_polarity(foodName, sentence):
 
 def _compute_polarity(subconcept):
     subconcept = stem(subconcept)
-
-    if not cached_polarity:
-        load_cached_polarity()
 
     if not global_concept_list:
         load_concept_list()

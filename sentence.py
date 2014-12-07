@@ -11,7 +11,6 @@ CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept
 CONCEPT_CACHE_FILENAME = "concept_cache.txt"
 MALT_PARSER_PATH = os.getenv("HOME") + "/maltparser-1.8.1"
 PARSES_FILENAME = "parses.txt"
-VERBOSE = True
 parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
 
 # initialization
@@ -41,21 +40,12 @@ class Sentence:
         return self._tokens
 
     def getGraph(self):
-        if not Sentence._cached_parses:
-            # cache not loaded yet
-            print "Loading parse cache"
-            Sentence.load_cached_parses()
-
         if self._graph:
             #already loaded
             return self._graph
         elif self.key in Sentence._cached_parses and self.subkey in Sentence._cached_parses[self.key]:
-            if VERBOSE:
-                print "Found graph in cache"
             self._graph = nltk.parse.DependencyGraph(Sentence._cached_parses[self.key][self.subkey])
         else:
-            if VERBOSE:
-                print "Not in cache, generating graph"
             self._graph = parser.tagged_parse(self.getPOS())
             if self.key not in Sentence._cached_parses:
                 Sentence._cached_parses[self.key] = {}
@@ -64,24 +54,14 @@ class Sentence:
 
 
     def getConcepts(self):
-        if not Sentence._cached_concepts:
-            # cache not loaded yet
-            print "Loading concept cache"
-            Sentence.load_cached_concepts()
-
         if self._concept_list:
             # already loaded
             return self._concept_list
         elif self.key in Sentence._cached_concepts and self.subkey in Sentence._cached_concepts[self.key]:
             # in cache
-            if VERBOSE:
-                print "Found concept in cache"
             self._concept_list = Sentence._cached_concepts[self.key][self.subkey]
         else:
             # otherwise, need to generate
-            if VERBOSE:
-                print "Not in cache, generating concepts"
-
             # use commandline
             proc = subprocess.Popen(
                 CONCEPT_PARSER_COMMAND_LIST,
@@ -112,6 +92,7 @@ class Sentence:
 
     @staticmethod
     def load_cached_concepts():
+        print "Loading concept cache"
         with open(CONCEPT_CACHE_FILENAME, 'r') as f:
             dictionary = simplejson.loads(f.read())
             for key in dictionary:
@@ -119,6 +100,7 @@ class Sentence:
 
     @staticmethod
     def load_cached_parses():
+        print "Loading parse cache"
         with open(PARSES_FILENAME, 'r') as f:
             dictionary = simplejson.loads(f.read())
             for key in dictionary:

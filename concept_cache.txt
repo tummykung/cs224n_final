@@ -1,1 +1,1 @@
-{"45": {"2": ["butter_burger", "be_spot", "cheese_curd", "fried_cheese_curd", "hit_spot", "spot", "heavy_mine", "heavy_on_onion", "red_onion", "onion", "good_thing", ""]}, "43": {"1": ["butter_burger", "thing_butter_burger", "midwest", "all_about_culver", "thing", ""], "0": ["get_burger_style", "all_californian", "all_about_in_n_out", "in_n_out", "burger_style", ""], "4": ["c._burger", "c._and_get_with_fries", "get_cheddar_burger", "burger", "cheddar_burger", ""]}}
+{}
