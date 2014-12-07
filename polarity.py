@@ -127,6 +127,18 @@ def compute_dep_polarity(foodName, sentence):
         dep_polarity = dep_polarity / dep_count
     return dep_polarity
 
+
+def _compute_polarity_from_cache(subconcept):
+    subconcept = stem(subconcept)
+
+    if not global_concept_list:
+        load_concept_list()
+    
+    if subconcept in cached_polarity:
+        return cached_polarity[subconcept]
+    return None
+
+
 def _compute_polarity(subconcept):
     subconcept = stem(subconcept)
 

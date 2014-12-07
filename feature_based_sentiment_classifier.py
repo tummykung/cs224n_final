@@ -2,10 +2,10 @@ import simplejson
 from process_reviews import INPUT_FILENAME
 from process_reviews import BUSINESS_FILENAME
 from process_reviews import load_results
-from polarity import _compute_polarity
 from sentence import CONCEPT_PARSER_COMMAND_LIST
 from svmutil import *
 from urllib2 import HTTPError
+import polarity
 
 import nltk
 from nltk.stem import WordNetLemmatizer
@@ -46,22 +46,35 @@ def original_read_input():
 
 def compute_polarity_wrapper(word):
     score = 0.0
+    raw_score = polarity._compute_polarity_from_cache(word)
+    if raw_score != None:
+        return raw_score
+
     try:
         score = sn.polarity(word)
     except HTTPError:
-        score = _compute_polarity(word)
+        score = polarity._compute_polarity(word)
 
     return score
 
 def setup(sample):
     sentence = sample["sentence"]
-    y.append(sample["rating"])
+    rating = sample["rating"]
+    # collapse 2 and -2 to 1 and -1, respectively
+    if rating == 2:
+        rating = 1
+    if rating == -2:
+        rating = -1
+
+    y.append(rating)
     new_x = {
-        # "polarity": sample["polarity"],
-        # "adj_polarity": sample["adj_polarity"],
-        # "dep_polarity": sample["dep_polarity"],
-        # "adjective_score_distance_pair": []
+        0: 1,
+        1: sample["concept_polarity"],
+        2: sample["adj_polarity"],
+        3: sample["adj_polarity"],
     }
+
+    offset = len(new_x) - 1
 
     # the remaining is for computing other features
 
@@ -86,10 +99,10 @@ def setup(sample):
             scores.append(score)
             distance = abs(i - food_index)
 
-            new_x[distance] = score
+            new_x[distance + offset] = score
             # new_x["adjective_score_distance_pair"].append((score, distance))
-    if len(scores) > 0:
-        new_x[0] = float(sum(scores))/len(scores)
+    # if len(scores) > 0:
+    #     new_x[0] = float(sum(scores))/len(scores)
     business = filter(lambda x:x["business_id"] == sample["business_id"], businesses)[0]
 
 
@@ -129,6 +142,7 @@ def write():
 
 
 def main():
+    polarity.load_cached_polarity()
     original_read_input()
     results = load_results(SAMPlE_DATA_PATH)
     gold_samples = filter(lambda x: x["type"] == "manual_label" and x["food"] == foodName, results)
@@ -141,7 +155,7 @@ def main():
         setup(gold_sample)
 
     # y, x = svm_read_problem('/Users/sorathan/libsvm-3.20/heart_scale')
-    m = svm_train(y[:210], x[:210], '-c 4 -w1 1 -w-1 2 -w0 1')
+    m = svm_train(y[:210], x[:210], '-c 1000000 -w1 0 -w-1 5 -w0 1')
     p_label, p_acc, p_val = svm_predict(y[210:], x[210:], m)
     import ipdb; ipdb.set_trace()
 
