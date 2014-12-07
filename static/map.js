@@ -210,6 +210,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
               '<p><b>business name: </b>'+review_emotion['name']+'</p>'+
               '<p><b>filtered concepts: </b>'+review_emotion['filtered_concepts']+'</p>'+
               '<p><b>concepts: </b>'+review_emotion['concepts']+'</p>'+
+              '<p><b>concept polarity: </b>'+review_emotion['concept_polarity']+'</p>'+
               '<p><b>dependency polarity: </b>'+review_emotion['dep_polarity']+'</p>'+
               '<p><b>adjective polarity: </b>'+review_emotion['adj_polarity']+'</p>'+
               '<p><b>votes: </b>'+JSON.stringify(review_emotion['votes'])+'</p>'+

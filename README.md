@@ -1,3 +1,12 @@
+Notes
+=====
+To run SVM, first run
+```
+export PYTHONPATH=$PYTHONPATH:$HOME/libsvm-3.20/python
+```
+
+
+
 NLP 224N Final Project Proposal
 ===============================
 
