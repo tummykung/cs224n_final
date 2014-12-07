@@ -1,14 +1,15 @@
 import os
 import nltk
 import simplejson
+import ipdb
 from sentence import Sentence
 from senticnet.senticnet import Senticnet
+from httplib import BadStatusLine
 
 # ==== CONFIGURATION ====
 CONCEPT_FILENAME = "concept_list.txt"
-MALT_PARSER_PATH = os.getenv("HOME") + "/maltparser-1.8.1"
 POLARITY_FILENAME = "polarity.txt"
-VERBOSE = True
+VERBOSE = False
 
 # initialization
 cached_polarity = {}
@@ -20,6 +21,7 @@ def cache_polarity():
         f.write(simplejson.dumps(cached_polarity))
 
 def load_cached_polarity():
+    print "Loading polarity cache"
     with open(POLARITY_FILENAME, 'r') as f:
         dictionary = simplejson.loads(f.read())
         for key in dictionary:
@@ -81,13 +83,13 @@ def compute_adj_polarity(foodName, sentence):
 
 
 def compute_dep_polarity(foodName, sentence):
+
     tagged = sentence.getPOS()
+    graph = sentence.getGraph()
     dep_polarity = 0.0
     dep_count = 0
     if VERBOSE:
         print "dep_polarity"
-    parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
-    graph = parser.tagged_parse(tagged)
     if VERBOSE:
         print graph.tree().pprint()
     for i,node in enumerate(graph.nodelist):
@@ -128,9 +130,6 @@ def compute_dep_polarity(foodName, sentence):
 def _compute_polarity(subconcept):
     subconcept = stem(subconcept)
 
-    if not cached_polarity:
-        load_cached_polarity()
-
     if not global_concept_list:
         load_concept_list()
     
@@ -150,11 +149,23 @@ def _compute_polarity(subconcept):
     for corpus_concept in global_concept_list:
         if subconcept == corpus_concept:
             count = 1
-            polarity = sn.polarity(corpus_concept)
+            gotIt = False
+            while not gotIt: 
+                try:
+                    polarity = sn.polarity(corpus_concept)
+                    gotIt = True
+                except BadStatusLine:
+                    print "Time out on polarity fetch for ", corpus_concept, " retrying..."
             break
         if subconcept in corpus_concept.split("_"):
             count += 1
-            polarity += sn.polarity(corpus_concept)
+            gotIt = False
+            while not gotIt: 
+                try:
+                    polarity += sn.polarity(corpus_concept)
+                    gotIt = True
+                except BadStatusLine:
+                    print "Time out on polarity fetch for ", corpus_concept, " retrying..."
     if (count > 0):
         # take the average
         polarity = polarity/count
