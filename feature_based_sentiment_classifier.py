@@ -3,10 +3,18 @@ from process_reviews import INPUT_FILENAME
 from process_reviews import BUSINESS_FILENAME
 from process_reviews import load_results
 from sentence import CONCEPT_PARSER_COMMAND_LIST
-from svmutil import *
+from sklearn import svm
+from sklearn import cross_validation
+from sklearn.cross_validation import train_test_split
+from sklearn.grid_search import GridSearchCV
+from sklearn.metrics import classification_report
+from sklearn import preprocessing
+from sklearn.svm import SVC
 from urllib2 import HTTPError
+import math
 import polarity
 
+import ipdb
 import nltk
 from nltk.stem import WordNetLemmatizer
 from senticnet.senticnet import Senticnet
@@ -19,18 +27,28 @@ import matplotlib.pyplot as plt
 
 # ==== CONFIGURATION ====
 SAMPlE_DATA_PATH = "static/test_data/sample_data.json"
+BAD_WORDS = "bad_words"
 
 # initialization
 inputs = []
 businesses = []
 results = []
 NUM_SAMPLE = 10000
+NUM_DATA = 280
+NUM_FEATURES = 6
 VERBOSE = True
-x = []
-y = []
+x = np.zeros(shape=(NUM_DATA, NUM_FEATURES))
+y = np.zeros(shape=(NUM_DATA)) 
 sn = Senticnet()
+bad_words = set()
 
 def original_read_input():
+    with open(BAD_WORDS, 'r') as f:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            bad_words.add(line.rstrip('\n'))
     with open(INPUT_FILENAME, 'r') as f:
         for i in range(NUM_SAMPLE):
             inputs.append(simplejson.loads(f.readline()))
@@ -57,7 +75,7 @@ def compute_polarity_wrapper(word):
 
     return score
 
-def setup(sample):
+def setup(sample, datapoint):
     sentence = sample["sentence"]
     rating = sample["rating"]
     # collapse 2 and -2 to 1 and -1, respectively
@@ -66,24 +84,23 @@ def setup(sample):
     if rating == -2:
         rating = -1
 
-    y.append(rating)
-    new_x = {
-        0: 1,
-        1: sample["concept_polarity"],
-        2: sample["adj_polarity"],
-        3: sample["adj_polarity"],
-    }
+    y[datapoint] = rating
 
-    offset = len(new_x) - 1
+    x[datapoint][0] = 1
+    x[datapoint][1] = sample["concept_polarity"]
+    x[datapoint][2] = sample["adj_polarity"]
+    x[datapoint][3] = sample["dep_polarity"]
 
-    # the remaining is for computing other features
+    for bad_word in bad_words:
+        if bad_word in sample["sentence"]:
+            x[datapoint][5] += 1
+
 
     # ----- first, do langauge processing on this sentence -----
     tokens = nltk.word_tokenize(sentence)
     tagged = nltk.pos_tag(tokens)
     # if VERBOSE:
         # print "POS: " + repr(tagged)
-
     food_index = -1
     actual_word = ""
     for i, word_and_POS in enumerate(tagged):
@@ -91,6 +108,8 @@ def setup(sample):
             food_index = i
             actual_word = word_and_POS[0]
 
+    total = 0
+    count = 0
     scores = []
     for i, word_and_POS in enumerate(tagged):
         POS = word_and_POS[1]
@@ -98,15 +117,16 @@ def setup(sample):
             score = compute_polarity_wrapper(word_and_POS[0])
             scores.append(score)
             distance = abs(i - food_index)
+            if distance != 0:
+                total += score / distance
+                count += 1
 
-            new_x[distance + offset] = score
-            # new_x["adjective_score_distance_pair"].append((score, distance))
-    # if len(scores) > 0:
-    #     new_x[0] = float(sum(scores))/len(scores)
-    business = filter(lambda x:x["business_id"] == sample["business_id"], businesses)[0]
+    if count > 0:
+        x[datapoint][4] = total / count
+                # new_x["adjective_score_distance_pair"].append((score, distance))
+        # if len(scores) > 0:
+        #     new_x[0] = float(sum(scores))/len(scores)
 
-
-    x.append(new_x)
 
     # results.append({
     #     "rating": dep_polarity, # for now, we'll use the dep_polarity as the main rating
@@ -152,17 +172,65 @@ def main():
     for i in range(len(gold_samples)):
         print str(i) + '/' + str(len(gold_samples))
         gold_sample = gold_samples[i]
-        setup(gold_sample)
+        setup(gold_sample, i)
 
-    # y, x = svm_read_problem('/Users/sorathan/libsvm-3.20/heart_scale')
-    m = svm_train(y[:210], x[:210], '-c 1000000 -w1 0 -w-1 5 -w0 1')
-    p_label, p_acc, p_val = svm_predict(y[210:], x[210:], m)
-    import ipdb; ipdb.set_trace()
+    cArray = []
+    for i in range(-15,15):
+        cArray.append(math.pow(2,i))
 
-    # train(train_data)
-    # test(test_data)
-    # original_read_input()
-    # write()
+    gammaArray = []
+    for i in range(-5,0):
+        gammaArray.append(math.pow(10,i))
+
+    coeffArray = []
+    for i in range(-5,0):
+        coeffArray.append(math.pow(10,i))
+
+    # Set the parameters by cross-validation
+    tuned_parameters = [{'kernel': ['rbf'], 'gamma': gammaArray,
+                         'C': cArray},
+                         {'kernel': ['poly'], 'gamma' : gammaArray, 
+                             'C': cArray, 'coef0': coeffArray},
+                        {'kernel': ['linear'], 'C': cArray}]
+
+    global x
+    #x = preprocessing.scale(x)
+    x[:,0] = 1
+
+    negativeWeight = len(y) / float(len(filter(lambda x : x == -1, y)))
+    zeroWeight = len(y) / float(len(filter(lambda x : x == 0, y)))
+    positiveWeight = len(y) / float(len(filter(lambda x : x == 1, y)))
+    print negativeWeight
+    print zeroWeight
+    print positiveWeight
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(x, y, test_size=0.5, random_state=0)
+    clf = GridSearchCV(SVC(class_weight={-1: negativeWeight, 0: zeroWeight, 1:
+        positiveWeight}), tuned_parameters,
+            cv=5, scoring='f1',
+            n_jobs=16 ) 
+    clf.fit(X_train, y_train)
+    print("Best parameters set found on development set:")
+    print()
+    print(clf.best_estimator_)
+    print()
+   # print("Grid scores on development set:")
+   # print()
+   # for params, mean_score, scores in clf.grid_scores_:
+   #     print("%0.3f (+/-%0.03f) for %r"
+   #           % (mean_score, scores.std() / 2, params))
+   # print()
+
+    print("Detailed classification report:")
+    print()
+    print("The model is trained on the full development set.")
+    print("The scores are computed on the full evaluation set.")
+    print()
+    y_true, y_pred = y_test, clf.predict(X_test)
+    print(classification_report(y_true, y_pred))
+    print()
+    ipdb.set_trace()
+
+
 
 if __name__ == '__main__':
     args = sys.argv[1:]
