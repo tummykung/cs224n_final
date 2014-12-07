@@ -1,9 +1,9 @@
 import simplejson
 from process_reviews import INPUT_FILENAME
 from process_reviews import BUSINESS_FILENAME
-from process_reviews import CONCEPT_PARSER_COMMAND_LIST
 from process_reviews import load_results
-from process_reviews import compute_polarity
+from polarity import _compute_polarity
+from sentence import CONCEPT_PARSER_COMMAND_LIST
 from svmutil import *
 from urllib2 import HTTPError
 
@@ -49,7 +49,7 @@ def compute_polarity_wrapper(word):
     try:
         score = sn.polarity(word)
     except HTTPError:
-        score = compute_polarity(word)
+        score = _compute_polarity(word)
 
     return score
 
@@ -78,15 +78,18 @@ def setup(sample):
             food_index = i
             actual_word = word_and_POS[0]
 
+    scores = []
     for i, word_and_POS in enumerate(tagged):
         POS = word_and_POS[1]
-        if POS == "JJ":
+        if POS in ("JJ", "JJS", "JJR"):
             score = compute_polarity_wrapper(word_and_POS[0])
+            scores.append(score)
             distance = abs(i - food_index)
 
             new_x[distance] = score
             # new_x["adjective_score_distance_pair"].append((score, distance))
-
+    if len(scores) > 0:
+        new_x[0] = float(sum(scores))/len(scores)
     business = filter(lambda x:x["business_id"] == sample["business_id"], businesses)[0]
 
 
@@ -131,15 +134,16 @@ def main():
     gold_samples = filter(lambda x: x["type"] == "manual_label" and x["food"] == foodName, results)
 
     # for now, let's do the first 10 sentences
-    gold_samples = gold_samples[0:200]
+    gold_samples = gold_samples[0:280]
     for i in range(len(gold_samples)):
         print str(i) + '/' + str(len(gold_samples))
         gold_sample = gold_samples[i]
         setup(gold_sample)
 
     # y, x = svm_read_problem('/Users/sorathan/libsvm-3.20/heart_scale')
-    m = svm_train(y[:150], x[:150], '-c 4')
-    p_label, p_acc, p_val = svm_predict(y[150:], x[150:], m)
+    m = svm_train(y[:210], x[:210], '-c 4 -w1 1 -w-1 2 -w0 1')
+    p_label, p_acc, p_val = svm_predict(y[210:], x[210:], m)
+    import ipdb; ipdb.set_trace()
 
     # train(train_data)
     # test(test_data)

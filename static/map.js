@@ -178,7 +178,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         markers = [];
 
         function selectPolarity(element) {
-            var epsilon = 0.3;
+            var epsilon = 0.45;
             var score_close_enough = Math.abs(element['rating'] - $scope.polarity/100) < epsilon;
             var right_food = $scope.food == element['food'];
             var manual_label = element['type'] == "manual_label";
