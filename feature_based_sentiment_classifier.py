@@ -96,7 +96,7 @@ def setup(sample, datapoint):
             x[datapoint][5] += 1
 
 
-    # ----- first, do langauge processing on this sentence -----
+    # ----- first, do language processing on this sentence -----
     tokens = nltk.word_tokenize(sentence)
     tagged = nltk.pos_tag(tokens)
     # if VERBOSE:

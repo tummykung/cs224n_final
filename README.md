@@ -1,9 +1,21 @@
-Notes
-=====
-To run SVM, first run
+Running our sentiment predictors
+================================
+Install the following through pip install
+- ```sklearn```
+- ```nltk``` (also download data after installing)
+- ```senticnet```
+
+Download MaltParser.
+
+Download concept parser from the senticNet website and place it at ```~/concept-parser```.
+
+
+To run SVM with libsvm, first run
 ```
 export PYTHONPATH=$PYTHONPATH:$HOME/libsvm-3.20/python
 ```
+
+To open our visualizer, open ```static/map.html```. Use Firefox instead of Safari for a better support of AngularJS.
 
 
 
