@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import ipdb
 import nltk
 import subprocess
@@ -19,7 +20,7 @@ class Sentence:
     _cached_concepts = {}
     _cached_parses = {}
 
-    def __init__(self, str_val, key, subkey):
+    def __init__(self, str_val, key, subkey, food):
         self.str_val = str_val
         self.key = str(key)
         self.subkey = str(subkey)
@@ -27,6 +28,7 @@ class Sentence:
         self._POS = []
         self._concept_list = []
         self._graph = []
+        self.food = food
 
     def getPOS(self):
         if not self._POS:
@@ -43,13 +45,20 @@ class Sentence:
         if self._graph:
             #already loaded
             return self._graph
-        elif self.key in Sentence._cached_parses and self.subkey in Sentence._cached_parses[self.key]:
-            self._graph = nltk.parse.DependencyGraph(Sentence._cached_parses[self.key][self.subkey])
+        elif self.food in Sentence._cached_parses and self.key in Sentence._cached_parses[self.food] and self.subkey in Sentence._cached_parses[self.food][self.key]:
+            self._graph = nltk.parse.DependencyGraph(Sentence._cached_parses[self.food][self.key][self.subkey])
         else:
-            self._graph = parser.tagged_parse(self.getPOS())
-            if self.key not in Sentence._cached_parses:
-                Sentence._cached_parses[self.key] = {}
-            Sentence._cached_parses[self.key][self.subkey] = self._graph.to_conll(4)
+            tagged = self.getPOS()
+            # BECAUSE I CANT FIGURE OUT HOW TO GET THE MALT PARSER NLTK WRAPPER
+            # TO WORK WITH THIS OMG
+            if self.food == "lobster" and self.key == "21770" and self.subkey == "3":
+                tagged[14] = (u'brule', 'NN')
+            self._graph = parser.tagged_parse(tagged)
+            if self.food not in Sentence._cached_parses:
+                Sentence._cached_parses[self.food] = {}
+            if self.key not in Sentence._cached_parses[self.food]:
+                Sentence._cached_parses[self.food][self.key] = {}
+            Sentence._cached_parses[self.food][self.key][self.subkey] = self._graph.to_conll(4)
         return self._graph
 
 
@@ -57,9 +66,9 @@ class Sentence:
         if self._concept_list:
             # already loaded
             return self._concept_list
-        elif self.key in Sentence._cached_concepts and self.subkey in Sentence._cached_concepts[self.key]:
+        elif self.food in Sentence._cached_concepts and self.key in Sentence._cached_concepts[self.food] and self.subkey in Sentence._cached_concepts[self.food][self.key]:
             # in cache
-            self._concept_list = Sentence._cached_concepts[self.key][self.subkey]
+            self._concept_list = Sentence._cached_concepts[self.food][self.key][self.subkey]
         else:
             # otherwise, need to generate
             # use commandline
@@ -74,9 +83,11 @@ class Sentence:
             output_list = stdout_value.split("\n")
             self._concept_list = output_list[1:] # the first one is the input
 
-            if self.key not in Sentence._cached_concepts:
-                Sentence._cached_concepts[self.key] = {}
-            Sentence._cached_concepts[self.key][self.subkey] = self._concept_list
+            if self.food not in Sentence._cached_concepts:
+                Sentence._cached_concepts[self.food] = {}
+            if self.key not in Sentence._cached_concepts[self.food]:
+                Sentence._cached_concepts[self.food][self.key] = {}
+            Sentence._cached_concepts[self.food][self.key][self.subkey] = self._concept_list
 
         return self._concept_list
 
@@ -95,13 +106,20 @@ class Sentence:
         print "Loading concept cache"
         with open(CONCEPT_CACHE_FILENAME, 'r') as f:
             dictionary = simplejson.loads(f.read())
-            for key in dictionary:
-                Sentence._cached_concepts[key] = dictionary[key]
+            for food in dictionary:
+                if food not in Sentence._cached_concepts:
+                    Sentence._cached_concepts[food] = {}
+
+                for key in dictionary[food]:
+                    Sentence._cached_concepts[food][key] = dictionary[food][key]
 
     @staticmethod
     def load_cached_parses():
         print "Loading parse cache"
         with open(PARSES_FILENAME, 'r') as f:
             dictionary = simplejson.loads(f.read())
-            for key in dictionary:
-                Sentence._cached_parses[key] = dictionary[key]
+            for food in dictionary:
+                if food not in Sentence._cached_parses:
+                    Sentence._cached_parses[food] = {}
+                for key in dictionary[food]:
+                    Sentence._cached_parses[food][key] = dictionary[food][key]

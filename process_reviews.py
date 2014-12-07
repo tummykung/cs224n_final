@@ -11,7 +11,8 @@ from optparse import OptionParser
 # ==== CONFIGURATION ====
 INPUT_FILENAME = "yelp_academic_dataset_review.json"
 BUSINESS_FILENAME = "yelp_academic_dataset_business.json"
-NUM_SAMPLE = 10000
+# TODO this thing here needs to be fixed!!
+NUM_SAMPLE = 50000
 OUTPUT_FILE_PATH = ""
 
 # initialization
@@ -119,7 +120,7 @@ def compute_polarity_scores():
             print "-------------------------------"
             print "subsentence#: " + str(j + 1) + "/" + str(len(subsentence_keys))
             print
-            sentence = Sentence(sentence_dict[subsentence_key]['sentence'], sentence_key, subsentence_key)
+            sentence = Sentence(sentence_dict[subsentence_key]['sentence'], sentence_key, subsentence_key, foodName)
             concept_polarity, filtered_concept_list = polarity.compute_concept_polarity(foodName, sentence)
             adj_polarity = polarity.compute_adj_polarity(foodName, sentence)
             dep_polarity = polarity.compute_dep_polarity(foodName, sentence)
@@ -194,14 +195,15 @@ def save_caches():
     Sentence.cache_concepts()
 
 def main(save):
-    if save:
-        load_results(OUTPUT_FILE_PATH)
     read_input()
     load_caches()
     filter_sentences()
     compute_polarity_scores()
+    # poor man's concurrency guard, in case some other process wrote to cache
+    load_caches()
     save_caches()
     if save:
+        load_results(OUTPUT_FILE_PATH)
         save_results()
     # plot()
 
