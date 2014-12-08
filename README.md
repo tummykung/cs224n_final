@@ -29,22 +29,22 @@ Other assorted data is in ```data```
 Visualizer
 ================================
 
-To open our visualizer, open ```static/map.html```. Use Firefox instead of Safari for a better support of AngularJS.
+To use our visualizer, open ```static/map.html```. Use Firefox instead of Safari for a better support of AngularJS.
 
-```map.js``` and ```admin.js``` contain all the logic components related to mapping.
-
+```static/map.js``` and ```static/admin.js``` contain all the logic components related to mapping and visualizing.
+ 
 
 Rule-Based Scorers
 ================================
 
-To run the scorers, go to the code directory, and run ```python process_review.py [foodName] 0 199```
+To run the scorers, run ```python code/process_review.py [foodName] 0 199```
 
 foodName can be any of beer, burger, burrito, lobster. 0 and 199 indicate that we're running from
 data sample 0 to data sample 199. You can change these numbers.
 
-To evaluate the scorer output, go to the code directory, and run
+To evaluate the scorer output, run
 ```
-python evaluator.py ../static/test_data/sample_data.json
+python evaluator.py static/test_data/sample_data.json
 ```
 
 Classifier
