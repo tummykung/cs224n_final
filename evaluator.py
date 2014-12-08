@@ -1,11 +1,14 @@
 from optparse import OptionParser
 import simplejson
 import sys
+import math
+import numpy as np
 
 resultsFile = ""
-results = []
 filteredSentences = {}
 scores = {}
+allScores = []
+results = []
 
 def load_results(filepath):
     with open(filepath, 'r') as f:
@@ -15,31 +18,46 @@ def load_results(filepath):
     return results
 
 def filter_results():
-    for entry in results:
-        if entry['type'] == 'manual_label':
-            if entry['rating'] >= 1:
-                val = 1
-            elif entry['rating'] == 0:
-                val = 0
-            else:
-                val = -1
-            if val not in scores:
-                scores[val] = []
-            scores[val].append((entry['concept_polarity'],
-                entry['adj_polarity'], entry['dep_polarity']))
+    firstPass = filter(lambda x : x['type'] == 'manual_label', results)
+    negatives = filter(lambda x : x['rating'] < 0, firstPass)
+    neutrals = filter(lambda x : x['rating'] == 0, firstPass)
+    positives = filter(lambda x : x['rating'] > 0, firstPass)
+    allScores = np.zeros(shape=(len(firstPass),3))
+    scores[-1] = np.zeros(shape=(len(negatives),3))
+    scores[0] = np.zeros(shape=(len(neutrals),3))
+    scores[1] = np.zeros(shape=(len(positives),3))
+    counters = {-1 : 0, 0 : 0, 1: 0}
+    for i,entry in enumerate(firstPass):
+        allScores[i][0] = entry['concept_polarity']
+        allScores[i][1] = entry['adj_polarity']
+        allScores[i][2] = entry['dep_polarity']
+    for entry in firstPass:
+        if entry['rating'] >= 1:
+            val = 1
+        elif entry['rating'] == 0:
+            val = 0
+        else:
+            val = -1
+        scores[val][counters[val]][0] = (entry['concept_polarity'] -
+                np.mean(allScores[:,0])) / np.std(allScores[:,0])
+        scores[val][counters[val]][1] = (entry['adj_polarity'] -
+                np.mean(allScores[:,1])) / np.std(allScores[:,1])
+        scores[val][counters[val]][2] = (entry['dep_polarity'] -
+                np.mean(allScores[:,2])) / np.std(allScores[:,2])
+        counters[val] += 1
 
 def compute_average():
-    for rating in sorted(scores.keys()):
-        total = reduce(lambda x, y : (x[0] + y[0], x[1] + y[1], x[2] + y[2]), scores[rating], (0, 0, 0))
-        mean = map(lambda x : x / len(scores[rating]), total)
-        totalSquared = reduce(lambda x, y : (x[0] + y[0] * y[0], x[1] + y[1] * y[1],
-            x[2] + y[2] * y[2]), scores[rating], (0, 0, 0))
-        meanXSquared = map(lambda x : x / len(scores[rating]), totalSquared)
-        xMeanSquared = map(lambda x : x * x, mean)
-        variance = map(lambda x, y : x - y, meanXSquared, xMeanSquared)
-        stats = zip(mean, variance)
+    means = np.zeros(shape=(3,3))
+    stdDevs = np.zeros(shape=(3,3))
+    for j,rating in enumerate(sorted(scores.keys())):
+        print j,
+        for i in range(0,3):
+            curr = scores[rating][:,i]
+            means[j][i] = np.mean(curr)
+            stdDevs[j][i] = np.std(curr)
+            print str.format('{0:.3f}', means[j][i]), " $\pm$ ", str.format('{0:.3f}',stdDevs[j][i]), "&",
+        print
 
-        print rating, stats
 
 
 def main():
