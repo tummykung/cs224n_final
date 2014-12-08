@@ -1,7 +1,7 @@
 Running our sentiment predictors
 ================================
 Install the following through pip install
-- ```sklearn```
+- ```scikit-learn```
 - ```nltk``` (also download data after installing)
 - ```senticnet```
 

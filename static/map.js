@@ -174,7 +174,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     markers = [];
 
     rePlot = function () {
-        var scores = [];
+        // var scores = [];
         markers = [];
 
         function selectPolarity(element) {
@@ -194,7 +194,12 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
             return select;
         }
 
+        function choose_rating(element) {
+            return -element['rating'];
+        }
+
         var filteredData = $scope.data.filter(selectPolarity);
+        filteredData.sort(choose_rating);
 
         for (var i = 0; i < filteredData.length - 1; i++) {
             var review_emotion = filteredData[i];
@@ -220,19 +225,25 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
             var marker = new google.maps.Marker({
                 position: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
                 map: $scope.map.map,
-                title: 'Review Sentiment'
+                title: 'Review Sentiment',
+                icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld='+i+'|FE6256|000000'
             });
 
             markers[i] = marker;
 
             closure(marker, contentString);
 
-            scores.push({
-                location: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
-                weight: (review_emotion['rating'] + 3) * 10
-            });
+            randX = (Math.random() - 0.5)/1000;
+            randY = (Math.random() - 0.5)/1000;
+            // scores.push({
+            //     location: new google.maps.LatLng(
+            //         parseFloat(review_emotion['lat']) + randX,
+            //         parseFloat(review_emotion['lng']) + randY
+            //     ),
+            //     weight: (review_emotion['rating'] + 3) * 10
+            // });
         }
-        $scope.scores = scores;
+        // $scope.scores = scores;
     }
 
     $scope.prev_infowindow = false; 
@@ -287,6 +298,8 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     $scope.$watch('data', redrawMap);
     $scope.$watch('food', redrawMap);
     $scope.$watch('see_all', redrawMap);
+
+    $scope.$watch('data', recalcData);
 
 
 	// Setup click behavior.

@@ -35,7 +35,7 @@ businesses = []
 results = []
 NUM_SAMPLE = 10000
 NUM_DATA = 280
-NUM_FEATURES = 6
+NUM_FEATURES = 9
 VERBOSE = True
 x = np.zeros(shape=(NUM_DATA, NUM_FEATURES))
 y = np.zeros(shape=(NUM_DATA)) 
@@ -90,66 +90,47 @@ def setup(sample, datapoint):
     x[datapoint][1] = sample["concept_polarity"]
     x[datapoint][2] = sample["adj_polarity"]
     x[datapoint][3] = sample["dep_polarity"]
+    x[datapoint][4] = sample["pleasantness"]
+    x[datapoint][5] = sample["aptitude"]
+    x[datapoint][6] = sample["attention"]
+    x[datapoint][7] = sample["sensitivity"]
 
-    for bad_word in bad_words:
-        if bad_word in sample["sentence"]:
-            x[datapoint][5] += 1
+    # for bad_word in bad_words:
+    #     if bad_word in sample["sentence"]:
+    #         x[datapoint][5] += 1
 
 
-    # ----- first, do language processing on this sentence -----
-    tokens = nltk.word_tokenize(sentence)
-    tagged = nltk.pos_tag(tokens)
-    # if VERBOSE:
-        # print "POS: " + repr(tagged)
-    food_index = -1
-    actual_word = ""
-    for i, word_and_POS in enumerate(tagged):
-        if foodName in word_and_POS[0]:
-            food_index = i
-            actual_word = word_and_POS[0]
+    # # ----- first, do language processing on this sentence -----
+    # tokens = nltk.word_tokenize(sentence)
+    # tagged = nltk.pos_tag(tokens)
+    # # if VERBOSE:
+    #     # print "POS: " + repr(tagged)
+    # food_index = -1
+    # actual_word = ""
+    # for i, word_and_POS in enumerate(tagged):
+    #     if foodName in word_and_POS[0]:
+    #         food_index = i
+    #         actual_word = word_and_POS[0]
 
-    total = 0
-    count = 0
-    scores = []
-    for i, word_and_POS in enumerate(tagged):
-        POS = word_and_POS[1]
-        if POS in ("JJ", "JJS", "JJR"):
-            score = compute_polarity_wrapper(word_and_POS[0])
-            scores.append(score)
-            distance = abs(i - food_index)
-            if distance != 0:
-                total += score / distance
-                count += 1
+    # total = 0
+    # count = 0
+    # scores = []
+    # for i, word_and_POS in enumerate(tagged):
+    #     POS = word_and_POS[1]
+    #     if POS in ("JJ", "JJS", "JJR"):
+    #         score = compute_polarity_wrapper(word_and_POS[0])
+    #         scores.append(score)
+    #         distance = abs(i - food_index)
+    #         if distance != 0:
+    #             total += score / distance
+    #             count += 1
 
-    if count > 0:
-        x[datapoint][4] = total / count
+    # if count > 0:
+    #     x[datapoint][4] = total / count
                 # new_x["adjective_score_distance_pair"].append((score, distance))
         # if len(scores) > 0:
         #     new_x[0] = float(sum(scores))/len(scores)
 
-
-    # results.append({
-    #     "rating": dep_polarity, # for now, we'll use the dep_polarity as the main rating
-    #     "type": "dep_polarity",
-    #     "polarity": average_polarity,
-    #     "adj_polarity": adj_polarity,
-    #     "dep_polarity": dep_polarity,
-    #     "id": i,
-    #     "sentence": sentence,
-    #     "sentence_key": sentence_key,
-    #     "subsentence_key": subsentence_key,
-    #     "business_id": inputs[sentence_key]["business_id"],
-    #     "user_id": inputs[sentence_key]["user_id"],
-    #     "votes": inputs[sentence_key]["votes"],
-    #     "stars": inputs[sentence_key]["stars"],
-    #     "lng": business["longitude"],
-    #     "lat": business["latitude"],
-    #     "full_address": business["full_address"],
-    #     "name": business["name"],
-    #     "food": foodName,
-    #     "concepts": sample_dict['full_concept'],
-    #     "filtered_concepts": sample_dict['filtered_concept']
-    # })
 
 def write():
     to_write = []
@@ -166,6 +147,10 @@ def main():
     original_read_input()
     results = load_results(SAMPlE_DATA_PATH)
     gold_samples = filter(lambda x: x["type"] == "manual_label" and x["food"] == foodName, results)
+
+    positve_examples = filter(lambda x: x["rating"] in (1, 2) , gold_samples)
+    negative_examples = filter(lambda x: x["rating"] in (-1, -2), gold_samples)
+    neutral_examples = filter(lambda x: x["rating"] == 0, gold_samples)
 
     # for now, let's do the first 10 sentences
     gold_samples = gold_samples[0:280]
@@ -197,9 +182,12 @@ def main():
     #x = preprocessing.scale(x)
     x[:,0] = 1
 
-    negativeWeight = len(y) / float(len(filter(lambda x : x == -1, y)))
-    zeroWeight = len(y) / float(len(filter(lambda x : x == 0, y)))
-    positiveWeight = len(y) / float(len(filter(lambda x : x == 1, y)))
+    # negativeWeight = len(y) / float(len(filter(lambda x : x == -1, y)))
+    # zeroWeight = len(y) / float(len(filter(lambda x : x == 0, y)))
+    # positiveWeight = len(y) / float(len(filter(lambda x : x == 1, y)))
+    negativeWeight = 1
+    zeroWeight = 1
+    positiveWeight = 1
     print negativeWeight
     print zeroWeight
     print positiveWeight
@@ -228,7 +216,86 @@ def main():
     y_true, y_pred = y_test, clf.predict(X_test)
     print(classification_report(y_true, y_pred))
     print()
+
+    # pair = zip(x, y)
+
+    # train = pair[0:210]
+    # test = pair[210:]
+
+    # pos = filter(lambda x:x[1]==1, train)
+    # zero  = filter(lambda x:x[1]==0, train)
+    # neg  = filter(lambda x:x[1]==-1, train)
+
+    # posTest = filter(lambda x:x[1]==1, test)
+    # zeroTest  = filter(lambda x:x[1]==0, test)
+    # negTest  = filter(lambda x:x[1]==-1, test)
+
+
+    # mean1 = sum(map(lambda x:sum(x[0][2:])/2, neg))/len(neg)
+    # mean2 = sum(map(lambda x:sum(x[0][2:])/2, zero))/len(zero)
+    # mean3 = sum(map(lambda x:sum(x[0][2:])/2, pos))/len(pos)
+
+
+    # best_error = 1.0
+    # bestI = -1
+    # bestJ = -1
+    # for i in range(-20, 20):
+    #     for j in range(-20, 20):
+    #         thingI = float(i)/4
+    #         thingJ = float(j)/4
+    #         m, n = evaluate_dumb_predictor(train, i, j, mean1, mean2, mean3)
+    #         if n < best_error:
+    #             best_error = n
+    #             bestI = thingI
+    #             bestJ = thingJ
+
+    # print evaluate_dumb_predictor(test, bestI, bestJ, mean1, mean2, mean3)
     ipdb.set_trace()
+
+def dumb_predictor(thing, a, b, mean1, mean2, mean3):
+    mean_neg = mean1
+    mean_zero = mean2
+    mean_pos = mean3
+
+    lower_threshold = (mean_neg + mean_zero)/2 + a
+    higher_threshold = (mean_pos + mean_zero)/2 + b
+
+    mean_thing = sum(thing)/2
+
+    if mean_thing < lower_threshold:
+        return -1
+    if mean_thing > higher_threshold:
+        return 1
+    else:
+        return 0
+
+def evaluate_dumb_predictor(data, i, j, mean1, mean2, mean3):
+    predictions = []
+    answers = []
+    for dataX, dataY in data:
+        predictions.append(dumb_predictor(dataX, i, j, mean1, mean2, mean3))
+        answers.append(dataY)
+
+    m, n = evaluate_error(zip(predictions, answers))
+    # print i,j, m, n
+    return m, n
+
+
+def evaluate_error(to_evaluate):
+    error = 0
+    total = len(to_evaluate)
+    for prediction, answer in to_evaluate:
+        if prediction != answer:
+            error += 1
+
+    return error, float(error)/len(to_evaluate)
+
+
+def num(the_set, threshold):
+    a = len(filter(lambda x: sum(x[0])/4 >= threshold, the_set))
+    b = len(the_set) - a
+    c = len(the_set)
+    return a,b,c
 
 
 
