@@ -55,7 +55,7 @@ def compute_average():
             curr = scores[rating][:,i]
             means[j][i] = np.mean(curr)
             stdDevs[j][i] = np.std(curr)
-            print str.format('{0:.3f}', means[j][i]), " $\pm$ ", str.format('{0:.3f}',stdDevs[j][i]), "&",
+            print str.format('{0:.3f}', means[j][i]), str.format('{0:.3f}',stdDevs[j][i]), 
         print
 
 

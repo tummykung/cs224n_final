@@ -14,20 +14,17 @@ from urllib2 import HTTPError
 import math
 import polarity
 
-import ipdb
 import nltk
 from nltk.stem import WordNetLemmatizer
 from senticnet.senticnet import Senticnet
 import subprocess
-import ipdb
 import numpy as np
 import os
 import sys
 import matplotlib.pyplot as plt
 
 # ==== CONFIGURATION ====
-SAMPlE_DATA_PATH = "static/test_data/sample_data.json"
-BAD_WORDS = "bad_words"
+SAMPlE_DATA_PATH = "../static/test_data/sample_data.json"
 
 # initialization
 inputs = []
@@ -40,15 +37,8 @@ VERBOSE = True
 x = np.zeros(shape=(NUM_DATA, NUM_FEATURES))
 y = np.zeros(shape=(NUM_DATA)) 
 sn = Senticnet()
-bad_words = set()
 
 def original_read_input():
-    with open(BAD_WORDS, 'r') as f:
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            bad_words.add(line.rstrip('\n'))
     with open(INPUT_FILENAME, 'r') as f:
         for i in range(NUM_SAMPLE):
             inputs.append(simplejson.loads(f.readline()))
@@ -95,9 +85,6 @@ def setup(sample, datapoint):
     x[datapoint][6] = sample["attention"]
     x[datapoint][7] = sample["sensitivity"]
 
-    # for bad_word in bad_words:
-    #     if bad_word in sample["sentence"]:
-    #         x[datapoint][5] += 1
 
 
     # # ----- first, do language processing on this sentence -----
@@ -188,9 +175,6 @@ def main():
     negativeWeight = 1
     zeroWeight = 1
     positiveWeight = 1
-    print negativeWeight
-    print zeroWeight
-    print positiveWeight
     X_train, X_test, y_train, y_test = cross_validation.train_test_split(x, y, test_size=0.5, random_state=0)
     clf = GridSearchCV(SVC(class_weight={-1: negativeWeight, 0: zeroWeight, 1:
         positiveWeight}), tuned_parameters,
@@ -250,7 +234,6 @@ def main():
     #             bestJ = thingJ
 
     # print evaluate_dumb_predictor(test, bestI, bestJ, mean1, mean2, mean3)
-    ipdb.set_trace()
 
 def dumb_predictor(thing, a, b, mean1, mean2, mean3):
     mean_neg = mean1

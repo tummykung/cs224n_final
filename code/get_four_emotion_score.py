@@ -3,7 +3,7 @@ import simplejson
 from senticnet.senticnet import Senticnet
 
 inputs = []
-OUTPUT_FILE_PATH = "static/test_data/sample_data.json"
+OUTPUT_FILE_PATH = "../static/test_data/sample_data.json"
 sn = Senticnet()
 outputs = []
 

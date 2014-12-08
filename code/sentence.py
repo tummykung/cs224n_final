@@ -6,12 +6,13 @@ import os
 import simplejson
 
 # ==== CONFIGURATION ====
+CACHE_DIR = "../caches/"
 CONCEPT_PARSER_PATH = os.getenv("HOME") + "/concept-parser"
 LIB_PATH = CONCEPT_PARSER_PATH + "/" + "concept_parser.jar" + ":" + CONCEPT_PARSER_PATH + "/lib/*"
 CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept_parser"]
-CONCEPT_CACHE_FILENAME = "concept_cache.txt"
+CONCEPT_CACHE_FILENAME = CACHE_DIR + "concept_cache.txt"
 MALT_PARSER_PATH = os.getenv("HOME") + "/maltparser-1.8.1"
-PARSES_FILENAME = "parses.txt"
+PARSES_FILENAME = CACHE_DIR + "parses.txt"
 parser = nltk.parse.malt.MaltParser(working_dir=MALT_PARSER_PATH,mco="engmalt.linear-1.7")
 
 # initialization

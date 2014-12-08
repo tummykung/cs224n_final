@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from optparse import OptionParser
 
 # ==== CONFIGURATION ====
-INPUT_FILENAME = "yelp_academic_dataset_review.json"
-BUSINESS_FILENAME = "yelp_academic_dataset_business.json"
-# TODO this thing here needs to be fixed!!
+DATA_DIR = "../data/"
+INPUT_FILENAME = DATA_DIR + "yelp_academic_dataset_review.json"
+BUSINESS_FILENAME = DATA_DIR + "yelp_academic_dataset_business.json"
 NUM_SAMPLE = 50000
 OUTPUT_FILE_PATH = ""
 
@@ -208,7 +208,7 @@ def main(save):
     # plot()
 
 if __name__ == '__main__':
-    print "use '--save_results static/test_data/sample_data.json' to append results there."
+    print "use '--save_results ../static/test_data/sample_data.json' to append results there."
     args = sys.argv[1:]
     parser = OptionParser(usage=main.__doc__)
     parser.add_option(

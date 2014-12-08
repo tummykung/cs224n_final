@@ -2,7 +2,8 @@ import simplejson
 import sys
 
 # ==== CONFIGURATION ====
-INPUT_FILENAME = "yelp_academic_dataset_review.json"
+DATA_DIR = '../data/'
+INPUT_FILENAME = DATA_DIR + "yelp_academic_dataset_review.json"
 
 # initialization
 foodName = ""
@@ -79,7 +80,7 @@ def rate():
                     "subsentence_key": subsentence_key,
                     "rating": rating,
                 }
-                with open(foodName + ".json", 'a') as f:
+                with open(DATA_DIR + foodName + ".json", 'a') as f:
                     f.write(simplejson.dumps(output))
                     f.write('\n')
 
