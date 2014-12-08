@@ -11,15 +11,15 @@ function lowerFirstLetter(string)
 }
 
 sentimentalApp.controller('MapUIController', function MapUIController($scope, $location) {
-	// Controller that manages linking the map and URL arguments to the
-	// current query. It has no querying logic itself. That is left up to
-	// QueryController which is also
-	// instantiated in query.html.
+    // Controller that manages linking the map and URL arguments to the
+    // current query. It has no querying logic itself. That is left up to
+    // QueryController which is also
+    // instantiated in query.html.
 
-	// (disabled) On first load, read in URL arguments and load those into the query.
-	// angular.extend($scope.watched, $location.search());
+    // (disabled) On first load, read in URL arguments and load those into the query.
+    // angular.extend($scope.watched, $location.search());
 
-	$scope.map = init_gmap(document.getElementById("map-canvas"));
+    $scope.map = init_gmap(document.getElementById("map-canvas"));
     $scope.data = [];
     $scope.capitaliseFirstLetter = capitaliseFirstLetter;
     $scope.scores = [];
@@ -37,13 +37,13 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
             });
         }});
 
-	// Setup map marker bindings.
-	$scope.queryMarker = null;
-	$scope.resultMarkers = [];
-	$scope.$watch('watched', function(newVal, oldVal) {
-		// var locationTokens = newVal.latLng.split(",");
-		// $scope.replaceMarker(new google.maps.LatLng(locationTokens[0], locationTokens[1]));
-	});
+    // Setup map marker bindings.
+    $scope.queryMarker = null;
+    $scope.resultMarkers = [];
+    $scope.$watch('watched', function(newVal, oldVal) {
+        // var locationTokens = newVal.latLng.split(",");
+        // $scope.replaceMarker(new google.maps.LatLng(locationTokens[0], locationTokens[1]));
+    });
 
     $scope.options = [
         [80, 80, 50, 50, "optimism"],
@@ -158,7 +158,7 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
                 sensitivity: sensitivity});
             scores.push({
                 location: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
-                weight: Math.pow(3 * (Math.min(1e3, 1.0 / distance)), 4)
+                weight: Math.pow(500 * (Math.min(1e3, 1000.0 / distance)), 10)
             });
         }
         $scope.scores = scores;
@@ -178,6 +178,9 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         markers = [];
 
         function selectPolarity(element) {
+            if($scope.hide_markers) {
+                return false;
+            }
             var epsilon = 0.45;
             var score_close_enough = Math.abs(element['rating'] - $scope.polarity/100) < epsilon;
             var right_food = $scope.food == element['food'];
@@ -191,6 +194,8 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
             if ($scope.gold_data) {
                 select = select && manual_label
             }
+
+
             return select;
         }
 
@@ -204,7 +209,6 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
         for (var i = 0; i < filteredData.length - 1; i++) {
             var review_emotion = filteredData[i];
 
-            // if (i > 0) {
             var contentString = '<div id="content">'+
               '<div id="siteNotice">'+'</div>'+
               '<h1 id="firstHeading" class="firstHeading">'+review_emotion['sentence']+'</h1>'+
@@ -218,23 +222,32 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
               '<p><b>concept polarity: </b>'+review_emotion['concept_polarity']+'</p>'+
               '<p><b>dependency polarity: </b>'+review_emotion['dep_polarity']+'</p>'+
               '<p><b>adjective polarity: </b>'+review_emotion['adj_polarity']+'</p>'+
+              '<p><b>pleasantness: </b>'+review_emotion['pleasantness']+'</p>'+
+              '<p><b>attention: </b>'+review_emotion['attention']+'</p>'+
+              '<p><b>sensitivity: </b>'+review_emotion['sensitivity']+'</p>'+
+              '<p><b>aptitude: </b>'+review_emotion['aptitude']+'</p>'+
               '<p><b>votes: </b>'+JSON.stringify(review_emotion['votes'])+'</p>'+
               '</div>'+
               '</div>';
 
+            // jiggle the points a little bit so we can see all reviews at a place
+            randX = (Math.random() - 0.5)/1000;
+            randY = (Math.random() - 0.5)/1000;
+
             var marker = new google.maps.Marker({
-                position: new google.maps.LatLng(review_emotion['lat'], review_emotion['lng']),
+                position: new google.maps.LatLng(review_emotion['lat'] + randX, review_emotion['lng'] + randY),
                 map: $scope.map.map,
                 title: 'Review Sentiment',
                 icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld='+i+'|FE6256|000000'
             });
 
+            
+            // if($scope.hide_markers == false) {
             markers[i] = marker;
-
             closure(marker, contentString);
+            // }
+            
 
-            randX = (Math.random() - 0.5)/1000;
-            randY = (Math.random() - 0.5)/1000;
             // scores.push({
             //     location: new google.maps.LatLng(
             //         parseFloat(review_emotion['lat']) + randX,
@@ -299,34 +312,36 @@ sentimentalApp.controller('MapUIController', function MapUIController($scope, $l
     $scope.$watch('food', redrawMap);
     $scope.$watch('see_all', redrawMap);
 
+    $scope.$watch('scores', redrawMap);
     $scope.$watch('data', recalcData);
+    $scope.$watch('hide_markers', redrawMap);
 
 
-	// Setup click behavior.
-	google.maps.event.addListener($scope.map.map, 'click', function(event) {
-		// Since this callback isn't fired from within angularjs, we have to
-		// make changes in $apply so it knows to propigate changes.
-		$scope.$apply(function() {
-			$scope.watched.latLng = event.latLng.lat() + "," + event.latLng.lng();
-			$scope.map.map.panTo(new google.maps.LatLng(event.latLng.lat(), event.latLng.lng()));
-		});
-	});
+    // Setup click behavior.
+    google.maps.event.addListener($scope.map.map, 'click', function(event) {
+        // Since this callback isn't fired from within angularjs, we have to
+        // make changes in $apply so it knows to propigate changes.
+        $scope.$apply(function() {
+            $scope.watched.latLng = event.latLng.lat() + "," + event.latLng.lng();
+            $scope.map.map.panTo(new google.maps.LatLng(event.latLng.lat(), event.latLng.lng()));
+        });
+    });
 
-	$scope.refreshMap = function() {
-		pleasantness = $( "#pleasantness" ).slider( "value" ),
-		attention = $( "#attention" ).slider( "value" ),
-		sensitivity = $( "#sensitivity" ).slider( "value" ),
-		aptitude = $( "#aptitude" ).slider( "value" );
+    $scope.refreshMap = function() {
+        pleasantness = $( "#pleasantness" ).slider( "value" ),
+        attention = $( "#attention" ).slider( "value" ),
+        sensitivity = $( "#sensitivity" ).slider( "value" ),
+        aptitude = $( "#aptitude" ).slider( "value" );
         polarity = $( "#polarity" ).slider( "value" );
 
-		$scope.pleasantness = pleasantness;
-		$scope.attention = attention;
-		$scope.sensitivity = sensitivity;
-		$scope.aptitude = aptitude;
+        $scope.pleasantness = pleasantness;
+        $scope.attention = attention;
+        $scope.sensitivity = sensitivity;
+        $scope.aptitude = aptitude;
         $scope.polarity = polarity;
 
-	    $scope.score = 0; //$scope.compute_distance({'pleasantness': 50, 'attention': 50, 'sensitivity': 50, 'aptitude': 50});
-	};
+        $scope.score = 0; //$scope.compute_distance({'pleasantness': 50, 'attention': 50, 'sensitivity': 50, 'aptitude': 50});
+    };
 
     $scope.compute_distance = function(input1, input2) {
       return Math.sqrt(
@@ -379,9 +394,9 @@ $(function() {
         }
     });
 
-	function update() {
-		$(".left-bar").click();
-	};
+    function update() {
+        $(".left-bar").click();
+    };
 });
 
 $(document).ready(function() {

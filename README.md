@@ -13,7 +13,7 @@ Download concept parser from the senticNet website and place it at ```~/concept-
 
 File structure
 ================================
-Most results are stored at ```static/test/sample_data.json```.
+Most results are stored at ```static/test_data/sample_data.json```.
 
 Caches are located in ```caches```
 
@@ -31,16 +31,20 @@ Visualizer
 
 To open our visualizer, open ```static/map.html```. Use Firefox instead of Safari for a better support of AngularJS.
 
+```map.js``` and ```admin.js``` contain all the logic components related to mapping.
+
 
 Rule-Based Scorers
 ================================
 
-To run the scorers, go to the code directory, and run ```python foodName 0 199```
+To run the scorers, go to the code directory, and run ```python evaluator.py foodName 0 199```
 
 foodName can be any of beer, burger, burrito, lobster
 
-To evaluate the scorer output, go to the code directory, and run ```python
-evaluator.py ../static/test_data/sample_data.json```
+To evaluate the scorer output, go to the code directory, and run
+```
+python evaluator.py ../static/test_data/sample_data.json
+```
 
 Classifier
 ================================

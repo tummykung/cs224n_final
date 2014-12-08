@@ -62,7 +62,7 @@ init_gmap = function(mapElement) {
         data: dataArray,
         map: map,
         dissipating: false,
-        radius: 0.004,
+        radius: 0.012,
         gradient: ["rgba(255, 255, 255, 0)", "rgba(255, 0, 0, 0.5)", "rgba(200, 0, 0, 1)"]
     });
 
