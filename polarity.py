@@ -9,7 +9,7 @@ from httplib import BadStatusLine
 # ==== CONFIGURATION ====
 CONCEPT_FILENAME = "concept_list.txt"
 POLARITY_FILENAME = "polarity.txt"
-VERBOSE = False
+VERBOSE = True
 
 # initialization
 cached_polarity = {}
@@ -114,15 +114,19 @@ def compute_dep_polarity(foodName, sentence):
                 currTag = tagged[parents - 1][1]
                 if VERBOSE:
                     print "evaluating: ", currWord, currTag
-                if currWord in ("except", "but", "not", "dont", "than", "no", "never"):
-                    inverted = -1 * inverted
-                elif currTag in ("RB", "VB", "VBN", "VBD", "VBZ", "VBP", "VBG", "JJR", "JJ", "JJS"):
-                    currPolarity = inverted * _compute_polarity(currWord)
-                    if currPolarity != 0:
-                        dep_polarity += currPolarity
-                        dep_count += 1
-                        if VERBOSE:
-                            print "parent: ", currWord, currTag, currPolarity
+                currPolarity = inverted * _compute_polarity(currWord)
+                if currTag in ("VB", "VBN", "VBD", "VBZ", "VBP", "VBG"):
+                    currDeps = map(lambda x : tagged[x - 1][0],
+                            graph.get_by_address(parents)['deps'])
+                    if len(filter(lambda x : x in ("except", "but", "not", "dont",
+                        "than", "no", "never"), currDeps)) > 0:
+                        currPolarity *= -1
+                        print "NEGATING"
+                if currPolarity != 0:
+                    dep_polarity += currPolarity
+                    dep_count += 1
+                    if VERBOSE:
+                        print "parent: ", currWord, currTag, currPolarity
     if dep_count > 0:
         dep_polarity = dep_polarity / dep_count
     return dep_polarity
