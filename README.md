@@ -37,9 +37,10 @@ To open our visualizer, open ```static/map.html```. Use Firefox instead of Safar
 Rule-Based Scorers
 ================================
 
-To run the scorers, go to the code directory, and run ```python evaluator.py foodName 0 199```
+To run the scorers, go to the code directory, and run ```python process_review.py [foodName] 0 199```
 
-foodName can be any of beer, burger, burrito, lobster
+foodName can be any of beer, burger, burrito, lobster. 0 and 199 indicate that we're running from
+data sample 0 to data sample 199. You can change these numbers.
 
 To evaluate the scorer output, go to the code directory, and run
 ```
