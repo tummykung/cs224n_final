@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from optparse import OptionParser
 
 # ==== CONFIGURATION ====
-DATA_DIR = "./"
+DATA_DIR = "data/"
 INPUT_FILENAME = DATA_DIR + "yelp_academic_dataset_review.json"
 BUSINESS_FILENAME = DATA_DIR + "yelp_academic_dataset_business.json"
 NUM_SAMPLE = 50000

@@ -41,14 +41,14 @@ To use our visualizer, open ```static/map.html```. Use Firefox instead of Safari
 
 Rule-Based Scorers
 ------------------
-To run the scorers, run ```python code/process_review.py [foodName] 0 199```
+To run the scorers, run ```python code/process_reviews.py [foodName] 0 199```
 
 foodName can be any of beer, burger, burrito, lobster. 0 and 199 indicate that we're running from
 data sample 0 to data sample 199. You can change these numbers.
 
 To evaluate the scorer output, run
 ```
-python evaluator.py static/test_data/sample_data.json
+python code/evaluator.py static/test_data/sample_data.json
 ```
 
 Classifier
