@@ -11,7 +11,7 @@ CACHE_DIR = "../caches/"
 DATA_DIR = "../data/"
 CONCEPT_FILENAME = DATA_DIR + "concept_list.txt"
 POLARITY_FILENAME = CACHE_DIR + "polarity.txt"
-VERBOSE = False
+VERBOSE = True
 
 # initialization
 cached_polarity = {}
