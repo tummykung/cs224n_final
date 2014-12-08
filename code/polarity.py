@@ -7,8 +7,8 @@ from senticnet.senticnet import Senticnet
 from httplib import BadStatusLine
 
 # ==== CONFIGURATION ====
-CACHE_DIR = "../caches/"
-DATA_DIR = "../data/"
+CACHE_DIR = "caches/"
+DATA_DIR = "data/"
 CONCEPT_FILENAME = DATA_DIR + "concept_list.txt"
 POLARITY_FILENAME = CACHE_DIR + "polarity.txt"
 VERBOSE = True

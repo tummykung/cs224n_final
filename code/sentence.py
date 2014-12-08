@@ -6,7 +6,7 @@ import os
 import simplejson
 
 # ==== CONFIGURATION ====
-CACHE_DIR = "../caches/"
+CACHE_DIR = "caches/"
 CONCEPT_PARSER_PATH = os.getenv("HOME") + "/concept-parser"
 LIB_PATH = CONCEPT_PARSER_PATH + "/" + "concept_parser.jar" + ":" + CONCEPT_PARSER_PATH + "/lib/*"
 CONCEPT_PARSER_COMMAND_LIST = ["java", "-cp", LIB_PATH, "semantic_parser.concept_parser"]

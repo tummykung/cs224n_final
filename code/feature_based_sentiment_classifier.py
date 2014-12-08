@@ -24,7 +24,7 @@ import sys
 import matplotlib.pyplot as plt
 
 # ==== CONFIGURATION ====
-SAMPlE_DATA_PATH = "../static/test_data/sample_data.json"
+SAMPlE_DATA_PATH = "static/test_data/sample_data.json"
 
 # initialization
 inputs = []
