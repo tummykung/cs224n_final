@@ -17,6 +17,8 @@ export PYTHONPATH=$PYTHONPATH:$HOME/libsvm-3.20/python
 
 To open our visualizer, open ```static/map.html```. Use Firefox instead of Safari for a better support of AngularJS.
 
+Most data are stored at ```static/test/sample_data.json```.
+
 
 
 NLP 224N Final Project Proposal
